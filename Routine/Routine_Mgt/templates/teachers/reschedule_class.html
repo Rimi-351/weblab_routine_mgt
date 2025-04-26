@@ -1,0 +1,44 @@
+<!-- teachers/reschedule_class.html -->
+<h2>Reschedule Class: {{ class_schedule.subject }}</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    
+    <label for="is_online">Is this class Online?</label>
+    <input type="radio" id="online" name="is_online" value="True" {% if form.is_online.value == 'True' %}checked{% endif %}> Yes
+    <input type="radio" id="offline" name="is_online" value="False" {% if form.is_online.value == 'False' %}checked{% endif %}> No
+
+    <div id="online-fields" style="display: {% if form.is_online.value == 'True' %}block{% else %}none{% endif %};">
+        <label for="online_duration">Online Duration (minutes)</label>
+        {{ form.online_duration }}
+    </div>
+
+    <div id="offline-fields" style="display: {% if form.is_online.value == 'False' %}block{% else %}none{% endif %};">
+        <label for="room">Room</label>
+        {{ form.room }}
+        <label for="online_duration">Offline Duration (minutes)</label>
+        {{ form.online_duration }}
+    </div>
+
+    <label for="new_start_time">New Start Time</label>
+    {{ form.new_start_time }}
+
+    <label for="new_end_time">New End Time</label>
+    {{ form.new_end_time }}
+
+    <button type="submit">Save Changes</button>
+</form>
+
+<script>
+    document.querySelectorAll('input[name="is_online"]').forEach((input) => {
+        input.addEventListener('change', function() {
+            if (this.value === 'True') {
+                document.getElementById('online-fields').style.display = 'block';
+                document.getElementById('offline-fields').style.display = 'none';
+            } else {
+                document.getElementById('online-fields').style.display = 'none';
+                document.getElementById('offline-fields').style.display = 'block';
+            }
+        });
+    });
+</script>
