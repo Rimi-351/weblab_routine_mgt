@@ -1,0 +1,8 @@
+<h2>Available Slots for {{ day }}</h2>
+<ul>
+  {% for slot in available_slots %}
+    <li>{{ slot.day }}: {{ slot.start_time }} - {{ slot.end_time }}</li>
+  {% empty %}
+    <li>No available slots for this day.</li>
+  {% endfor %}
+</ul>
