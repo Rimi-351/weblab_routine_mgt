@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
 from .models import Course
 from .forms import CourseForm  # You'll need to create this form
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout
 from django.contrib import messages
+from .forms import CustomUserCreationForm
 def add_course(request):
     if request.method == 'POST':
         form = CourseForm(request.POST)
@@ -20,14 +21,14 @@ def course_list(request):
 
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
             messages.success(request, "Registration successful!")
             return redirect('/')
     else:  # Ensure form is initialized on a GET request
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     
     return render(request, 'courses/register.html', {'form': form})
   

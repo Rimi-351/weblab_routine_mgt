@@ -1,6 +1,9 @@
 from django import forms
 from .models import Course
 
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
@@ -12,3 +15,11 @@ class CourseForm(forms.ModelForm):
             'total_classes': forms.NumberInput(attrs={'class': 'form-control'}),
             'teachers': forms.SelectMultiple(attrs={'class': 'form-control'}),
         }
+
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
