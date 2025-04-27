@@ -1,0 +1,8 @@
+<h2>Recent Notifications</h2>
+<ul>
+  {% for note in notifications %}
+    <li><strong>{{ note.title }}</strong><br>{{ note.message }}<br><small>{{ note.created_at }}</small></li>
+  {% empty %}
+    <li>No notifications yet.</li>
+  {% endfor %}
+</ul>
