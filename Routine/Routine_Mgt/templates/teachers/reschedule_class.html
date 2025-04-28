@@ -1,95 +1,42 @@
+<!-- teachers/templates/teachers/reschedule_class.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reschedule Class</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        .reschedule-form {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .back-link {
-            text-decoration: none;
-            color: #007BFF;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .form-group {
-            margin-bottom: 10px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .error {
-            color: red;
-        }
-    </style>
 </head>
 <body>
-    <h1>Reschedule Class: {{ class_schedule.subject }}</h1>
+    <h2>Reschedule Class: {{ class_schedule.subject }}</h2>
 
-    <div class="reschedule-form">
-        <p><strong>Current Slot:</strong> {{ class_schedule.slot }} | <strong>Date:</strong> {{ class_schedule.date }}</p>
+    <form method="POST">
+        {% csrf_token %}
 
-        <form method="POST">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="is_online">Is this class Online?</label>
-                <input type="radio" id="online" name="is_online" value="True" {% if form.is_online.value == 'True' %}checked{% endif %}> Yes
-                <input type="radio" id="offline" name="is_online" value="False" {% if form.is_online.value == 'False' %}checked{% endif %}> No
-            </div>
+        <label for="is_online">Is this class Online or Offline?</label><br>
+        <input type="radio" id="online" name="is_online" value="True" {% if form.initial.is_online %}checked{% endif %}> Online
+        <input type="radio" id="offline" name="is_online" value="False" {% if not form.initial.is_online %}checked{% endif %}> Offline
+<hr>
+        <div id="online-fields" style="display: {% if form.initial.is_online %}block{% else %}none{% endif %};">
+            <label for="online_duration">Online Duration (minutes)</label><br>
+            {{ form.online_duration }}
+        </div>
 
-            <div id="online-fields" style="display: {% if form.is_online.value == 'True' %}block{% else %}none{% endif %};">
-                <div class="form-group">
-                    <label for="online_duration">Online Duration (minutes)</label>
-                    {{ form.online_duration }}
-                </div>
-            </div>
+        <div id="offline-fields" style="display: {% if not form.initial.is_online %}block{% else %}none{% endif %};">
+            <label for="room">Room</label><br>
+            {{ form.room }}
+            <label for="offline_duration">Offline Duration (minutes)</label><br>
+            {{ form.offline_duration }}
+        </div>
 
-            <div id="offline-fields" style="display: {% if form.is_online.value == 'False' %}block{% else %}none{% endif %};">
-                <div class="form-group">
-                    <label for="room">Room</label>
-                    {{ form.room }}
-                </div>
-            </div>
+        <label for="new_start_time">New Start Time</label><br>
+        {{ form.new_start_time }}
+<br>
+        <label for="new_end_time">New End Time</label><br>
+        {{ form.new_end_time }}
 
-            <div class="form-group">
-                <label for="new_start_time">New Start Time</label>
-                {{ form.new_start_time }}
-            </div>
-
-            <div class="form-group">
-                <label for="new_end_time">New End Time</label>
-                {{ form.new_end_time }}
-            </div>
-
-            <button type="submit">Save Changes</button>
-        </form>
-
-        <a href="{% url 'teacher_detail' class_schedule.teacher.id %}" class="back-link">Back to Teacher Details</a>
-    </div>
+        <br><br>
+        <button type="submit">Save Changes</button>
+    </form>
 
     <script>
         document.querySelectorAll('input[name="is_online"]').forEach((input) => {
@@ -104,5 +51,6 @@
             });
         });
     </script>
+
 </body>
 </html>
