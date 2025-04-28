@@ -46,8 +46,7 @@
             <li class="teacher-item">
                 <h2>{{ teacher.name }}</h2>
                 <p>Email: {{ teacher.email }}</p>
-                <a href="{% url 'teacher_detail' teacher.id %}">View Details</a> | 
-                <a href="{% url 'reschedule_class' teacher.classschedule.id %}">Reschedule Class</a>
+                <a href="{% url 'teacher_detail' teacher.id %}">View Details</a>
             </li>
         {% endfor %}
     </ul>

@@ -12,26 +12,36 @@ class RescheduleForm(forms.ModelForm):
         online_duration = cleaned_data.get('online_duration')
         room = cleaned_data.get('room')
 
-        # Validation: If online is selected, room should be empty
-        if is_online and room:
-            self.add_error('room', 'Room should be empty for online classes.')
-
-        # Validation: If offline is selected, online_duration should be empty
-        if not is_online and online_duration:
-            self.add_error('online_duration', 'Online duration should be empty for offline classes.')
+        # Validation
+        if is_online:
+            if room:
+                self.add_error('room', 'Room should be empty for online classes.')
+            if not online_duration:
+                self.add_error('online_duration', 'Online duration is required for online classes.')
+        else:
+            if online_duration:
+                self.add_error('online_duration', 'Online duration should be empty for offline classes.')
+            if not room:
+                self.add_error('room', 'Room is required for offline classes.')
 
         return cleaned_data
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Make the fields conditional based on `is_online`
-        if self.instance.is_online:
+        
+        # Make fields required based on instance data
+        is_online = None
+        if self.instance and self.instance.pk:
+            is_online = self.instance.is_online
+        if 'data' in kwargs:
+            is_online = kwargs['data'].get('is_online') == 'True'
+
+        if is_online:
             self.fields['online_duration'].required = True
             self.fields['room'].required = False
-            self.fields['new_start_time'].required = True
-            self.fields['new_end_time'].required = True
         else:
             self.fields['online_duration'].required = False
             self.fields['room'].required = True
-            self.fields['new_start_time'].required = True
-            self.fields['new_end_time'].required = True
+
+        self.fields['new_start_time'].required = True
+        self.fields['new_end_time'].required = True

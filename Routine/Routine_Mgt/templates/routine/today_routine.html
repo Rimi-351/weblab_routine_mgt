@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today's Routine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Today's Routine</h1>
+        <ul class="list-group">
+            {% for routine in today_routine %}
+                <li class="list-group-item">
+                    <strong>{{ routine.course.title }}</strong> by {{ routine.teacher.name }} at {{ routine.slot.start_time }}
+                </li>
+            {% empty %}
+                <li class="list-group-item">No classes scheduled for today.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

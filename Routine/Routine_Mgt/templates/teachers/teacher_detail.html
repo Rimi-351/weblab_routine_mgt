@@ -47,11 +47,16 @@
         <h3>Courses:</h3>
         <ul>
             {% for schedule in teacher.classschedule_set.all %}
-                <li>{{ schedule.subject }} - {{ schedule.date }} at {{ schedule.time }}</li>
+                <li>
+                    {{ schedule.subject }} - {{ schedule.date }} at {{ schedule.time }}
+                    | <a href="{% url 'reschedule_class' schedule.id %}">Reschedule Class</a>
+                </li>
+            {% empty %}
+                <li>No classes scheduled yet.</li>
             {% endfor %}
         </ul>
 
-        <a href="{% url 'reschedule_class' teacher.classschedule.id %}" class="back-link">Reschedule Class</a>
+        <a href="{% url 'teacher_list' %}" class="back-link">Back to Teacher List</a>
     </div>
 </body>
 </html>
