@@ -1,6 +1,6 @@
+# teachers/admin.py
 from django.contrib import admin
-
-# Register your models here.
-from .models import Teacher
+from .models import Teacher, ClassSchedule
 
 admin.site.register(Teacher)
+admin.site.register(ClassSchedule)

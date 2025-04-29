@@ -1,0 +1,70 @@
+{% load custom_filters %}
+
+<h1 class="text-center my-4">Available slots</h1>
+<table border=1 class="table table-bordered table-striped">
+    <thead class="thead-dark">
+        <tr>
+            <th class="text-center">Time Slot</th>
+            {% for day in days_of_week %}
+                <th class="text-center">{{ day }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for time_slot in time_slots %}
+            <tr>
+                <td class="text-center">{{ time_slot.start_time }} - {{ time_slot.end_time }}</td>
+                {% for day in days_of_week %}
+                    <td>
+                        {% for availability in weekly_availability|get_day_availability:day %}
+                            {% if availability.slot == time_slot %}
+                                <ul class="list-unstyled">
+                                    {% for room in availability.available_rooms %}
+                                        <li>{{ room.number }}</li>
+                                    {% empty %}
+                                        <li class="text-muted">No available rooms</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Add some styling here for a better layout -->
+<style>
+    .table {
+        width: 100%;
+        margin-top: 20px;
+    }
+    .table th, .table td {
+        vertical-align: middle;
+        text-align: center;
+        padding: 10px;
+    }
+    .thead-dark {
+        background-color: #343a40;
+        color: white;
+    }
+    th {
+        background-color:rgb(3, 14, 24);
+    }
+    td {
+        background-color: #fff;
+    }
+    .text-muted {
+        color: #6c757d;
+    }
+    .list-unstyled {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .my-4 {
+        margin-top: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+</style>
