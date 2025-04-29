@@ -312,3 +312,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'ummatunkhatun086@gmail.com'  # your Gmail
 EMAIL_HOST_PASSWORD = '****'
 
+>>>>>>> origin/authenticate
