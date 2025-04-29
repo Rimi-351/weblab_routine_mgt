@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import ClassSchedule, Reschedule,Teacher  # noqa: F401
+from .models import ClassSchedule, Reschedule, Teacher
 from .forms import RescheduleForm
+from routine.models import Routine, Notification  # ← import Routine & Notification
 
 def teacher_list(request):
     teachers = Teacher.objects.all()
@@ -13,13 +14,36 @@ def teacher_detail(request, teacher_id):
 
 def reschedule_class(request, schedule_id):
     class_schedule = get_object_or_404(ClassSchedule, id=schedule_id)
+
     if request.method == 'POST':
         form = RescheduleForm(request.POST)
         if form.is_valid():
             rescheduled = form.save(commit=False)
             rescheduled.class_schedule = class_schedule
             rescheduled.save()
-            return redirect('teacher_list')  # Redirect to teacher list after rescheduling
+
+            # ➡ Update Routine
+            try:
+                routine = Routine.objects.get(
+                    teacher=class_schedule.teacher,
+                    course__title=class_schedule.subject,
+                )
+                routine.status = 'rescheduled'
+                routine.is_cancelled = False
+                routine.slot.start_time = rescheduled.new_start_time
+                routine.slot.end_time = rescheduled.new_end_time
+                routine.save()
+
+                # ➡ Send Notification
+                Notification.objects.create(
+                    title="Class Rescheduled",
+                    message=f"{routine.course.title} class has been rescheduled to {rescheduled.new_start_time}-{rescheduled.new_end_time}.",
+                )
+
+            except Routine.DoesNotExist:
+                pass
+
+            return redirect('teacher_list')
     else:
         form = RescheduleForm()
 

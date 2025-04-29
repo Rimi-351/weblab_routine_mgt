@@ -1,57 +1,25 @@
+<!-- teachers/templates/teachers/teacher_detail.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ teacher.name }} - Details</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        .teacher-detail {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .teacher-detail p {
-            margin: 5px 0;
-        }
-
-        .back-link {
-            text-decoration: none;
-            color: #007BFF;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <title>{{ teacher.name }} - Courses</title>
 </head>
 <body>
-    <h1>{{ teacher.name }} - Details</h1>
-    <div class="teacher-detail">
-        <p><strong>Email:</strong> {{ teacher.email }}</p>
-        <p><strong>Designation:</strong> {{ teacher.designation }}</p>
-        <p><strong>Department:</strong> {{ teacher.department }}</p>
-        
-        <h3>Courses:</h3>
-        <ul>
-            {% for schedule in teacher.classschedule_set.all %}
-                <li>{{ schedule.subject }} - {{ schedule.date }} at {{ schedule.time }}</li>
-            {% endfor %}
-        </ul>
+    <h1>Courses for {{ teacher.name }}</h1>
 
-        <a href="{% url 'reschedule_class' teacher.classschedule.id %}" class="back-link">Reschedule Class</a>
-    </div>
+    <ul>
+        {% for schedule in schedules %}
+            <li>
+                {{ schedule.subject }} on {{ schedule.date }} from {{ schedule.start_time }} to {{ schedule.end_time }}
+                - <a href="{% url 'reschedule_class' schedule.id %}">Reschedule</a>
+            </li>
+        {% empty %}
+            <li>No courses available for this teacher.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'teacher_list' %}">← Back to Teacher List</a>
 </body>
 </html>

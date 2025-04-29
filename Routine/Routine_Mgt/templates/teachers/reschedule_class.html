@@ -1,44 +1,56 @@
-<!-- teachers/reschedule_class.html -->
-<h2>Reschedule Class: {{ class_schedule.subject }}</h2>
+<!-- teachers/templates/teachers/reschedule_class.html -->
 
-<form method="POST">
-    {% csrf_token %}
-    
-    <label for="is_online">Is this class Online?</label>
-    <input type="radio" id="online" name="is_online" value="True" {% if form.is_online.value == 'True' %}checked{% endif %}> Yes
-    <input type="radio" id="offline" name="is_online" value="False" {% if form.is_online.value == 'False' %}checked{% endif %}> No
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reschedule Class</title>
+</head>
+<body>
+    <h2>Reschedule Class: {{ class_schedule.subject }}</h2>
 
-    <div id="online-fields" style="display: {% if form.is_online.value == 'True' %}block{% else %}none{% endif %};">
-        <label for="online_duration">Online Duration (minutes)</label>
-        {{ form.online_duration }}
-    </div>
+    <form method="POST">
+        {% csrf_token %}
 
-    <div id="offline-fields" style="display: {% if form.is_online.value == 'False' %}block{% else %}none{% endif %};">
-        <label for="room">Room</label>
-        {{ form.room }}
-        <label for="online_duration">Offline Duration (minutes)</label>
-        {{ form.online_duration }}
-    </div>
+        <label for="is_online">Is this class Online or Offline?</label><br>
+        <input type="radio" id="online" name="is_online" value="True" {% if form.initial.is_online %}checked{% endif %}> Online
+        <input type="radio" id="offline" name="is_online" value="False" {% if not form.initial.is_online %}checked{% endif %}> Offline
+<hr>
+        <div id="online-fields" style="display: {% if form.initial.is_online %}block{% else %}none{% endif %};">
+            <label for="online_duration">Online Duration (minutes)</label><br>
+            {{ form.online_duration }}
+        </div>
 
-    <label for="new_start_time">New Start Time</label>
-    {{ form.new_start_time }}
+        <div id="offline-fields" style="display: {% if not form.initial.is_online %}block{% else %}none{% endif %};">
+            <label for="room">Room</label><br>
+            {{ form.room }}
+            <label for="offline_duration">Offline Duration (minutes)</label><br>
+            {{ form.offline_duration }}
+        </div>
 
-    <label for="new_end_time">New End Time</label>
-    {{ form.new_end_time }}
+        <label for="new_start_time">New Start Time</label><br>
+        {{ form.new_start_time }}
+<br>
+        <label for="new_end_time">New End Time</label><br>
+        {{ form.new_end_time }}
 
-    <button type="submit">Save Changes</button>
-</form>
+        <br><br>
+        <button type="submit">Save Changes</button>
+    </form>
 
-<script>
-    document.querySelectorAll('input[name="is_online"]').forEach((input) => {
-        input.addEventListener('change', function() {
-            if (this.value === 'True') {
-                document.getElementById('online-fields').style.display = 'block';
-                document.getElementById('offline-fields').style.display = 'none';
-            } else {
-                document.getElementById('online-fields').style.display = 'none';
-                document.getElementById('offline-fields').style.display = 'block';
-            }
+    <script>
+        document.querySelectorAll('input[name="is_online"]').forEach((input) => {
+            input.addEventListener('change', function() {
+                if (this.value === 'True') {
+                    document.getElementById('online-fields').style.display = 'block';
+                    document.getElementById('offline-fields').style.display = 'none';
+                } else {
+                    document.getElementById('online-fields').style.display = 'none';
+                    document.getElementById('offline-fields').style.display = 'block';
+                }
+            });
         });
-    });
-</script>
+    </script>
+
+</body>
+</html>
