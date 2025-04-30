@@ -11,9 +11,6 @@ class Room(models.Model):
     def __str__(self):
         return self.number
 
-
-
-
 class Slot(models.Model):
     day = models.CharField(max_length=10)
     start_time = models.TimeField()
