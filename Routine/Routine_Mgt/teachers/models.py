@@ -23,11 +23,12 @@ class ClassSchedule(models.Model):
 
 class Reschedule(models.Model):
     class_schedule = models.ForeignKey(ClassSchedule, on_delete=models.CASCADE)
-    is_online = models.BooleanField(default=False)  # True if online, False if offline
-    online_duration = models.IntegerField(null=True, blank=True)  # Duration in minutes if the class is online
-    room = models.CharField(max_length=100, null=True, blank=True)  # Room for offline classes
+    reschedule_date = models.DateField()  # replaced selected_day
+    is_online = models.BooleanField(default=False)
+    online_duration = models.IntegerField(null=True, blank=True)
+    room = models.CharField(max_length=100, null=True, blank=True)
     new_start_time = models.TimeField(null=True, blank=True)
     new_end_time = models.TimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Reschedule for {self.class_schedule.subject} on {self.class_schedule.date}"
+        return f"Reschedule for {self.class_schedule.subject} on {self.reschedule_date}"
