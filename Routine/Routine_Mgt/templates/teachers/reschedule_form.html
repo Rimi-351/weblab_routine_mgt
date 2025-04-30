@@ -1,0 +1,12 @@
+{% extends "base.html" %}  {# or your main layout file #}
+
+{% block content %}
+  <h2>Reschedule Class</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+  </form>
+
+{% endblock %}

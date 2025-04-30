@@ -1,10 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from .models import Slot, Routine, Room, Notification
-from .utils import get_available_slots_for_day, get_today_routines
+from .utils import get_today_routines
 from courses.models import Course
 from teachers.models import Teacher
-from django.shortcuts import render, redirect
 from django.utils import timezone
 
 def add_slot_view(request):
@@ -35,11 +34,8 @@ def add_slot_view(request):
     return render(request, 'routine/add_slot.html')
 
 
-from django.shortcuts import render
-
 def routine_home_view(request):
     return render(request, 'routine/routine_home.html')
-
 
 
 def available_slots_view(request):
@@ -53,13 +49,12 @@ def available_slots_view(request):
     # Create an empty list to hold the time slots (e.g., 9:00-10:20)
     time_slots = Slot.objects.order_by('start_time').distinct()
 
-    # Dictionary to store availability for each day
-    weekly_availability = {}
+    # List to store availability
+    weekly_availability = []
 
     for day in days_of_week:
         # Find all slots for the current day
         day_slots = Slot.objects.filter(day=day)
-        available_rooms_for_day = []
 
         for slot in day_slots:
             # Get booked rooms for the current day and time slot
@@ -68,14 +63,12 @@ def available_slots_view(request):
             # Find rooms that are not booked for this slot
             available_rooms = rooms.exclude(id__in=booked_rooms)
 
-            # Store available rooms for this day and slot
-            available_rooms_for_day.append({
+            # Append each availability record to the list
+            weekly_availability.append({
+                'day': day,
                 'slot': slot,
                 'available_rooms': available_rooms,
             })
-
-        # Store the availability for the day
-        weekly_availability[day] = available_rooms_for_day
 
     # Pass both weekly_availability and time_slots to the template
     return render(request, 'routine/available_slots.html', {
@@ -84,11 +77,13 @@ def available_slots_view(request):
         'time_slots': time_slots,
     })
 
+
 def notification_list_view(request):
     notifications = Notification.objects.all().order_by('-created_at')[:10]
     return render(request, 'routine/notifications.html', {
         'notifications': notifications,
     })
+
 
 def today_routine_view(request):
     today_routine = get_today_routines()
@@ -96,11 +91,13 @@ def today_routine_view(request):
         'today_routine': today_routine,
     })
 
+
 def routine_list_view(request):
     routines = Routine.objects.all().order_by('slot__day', 'slot__start_time')
     return render(request, 'routine/routine_list.html', {
         'routines': routines,
     })
+
 
 def routine_create_view(request):
     if request.method == 'POST':
@@ -152,7 +149,7 @@ def routine_create_view(request):
         'slots': slots,
     })
 
-    
+
 def reschedule_class_view(request, schedule_id):
     routine = get_object_or_404(Routine, id=schedule_id)
     
@@ -173,5 +170,3 @@ def reschedule_class_view(request, schedule_id):
     return render(request, 'routine/reschedule_class.html', {
         'routine': routine,
     })
-
-
