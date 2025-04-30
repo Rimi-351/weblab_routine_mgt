@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #d4f1c5; /* Pastel green background */
+            background-color: #fff;
             margin: 0;
             padding: 30px;
         }
@@ -20,7 +20,7 @@
         form {
             max-width: 600px;
             margin: 0 auto;
-            background-color: #ffffff;
+            background-color: #ffe4e6; /* Pastel pink form background */
             padding: 25px 30px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -56,8 +56,8 @@
         button {
             display: block;
             width: 100%;
-            background-color: #66bb6a; /* Darker pastel green */
-            color: white;
+            background-color: #f28b96; /* Deeper pink */
+            color: black;
             padding: 12px;
             border: none;
             border-radius: 6px;
@@ -67,7 +67,7 @@
         }
 
         button:hover {
-            background-color: #388e3c; /* Even darker shade for hover */
+            background-color: #de5d6a; /* Even deeper pink on hover */
         }
 
         hr {
@@ -83,8 +83,8 @@
 
         .select-room-btn {
             display: inline-block;
-            background-color: #66bb6a; /* Darker pastel green */
-            color: white;
+            background-color:rgb(234, 139, 149); /* 4 shades deeper */
+            color: black;
             padding: 10px 15px;
             border-radius: 5px;
             font-size: 14px;
@@ -94,7 +94,7 @@
         }
 
         .select-room-btn:hover {
-            background-color: #388e3c; /* Darker shade on hover */
+            background-color: #c94756; /* Slightly deeper on hover */
         }
     </style>
 </head>
@@ -105,23 +105,23 @@
             <li class="{{ message.tags }}">{{ message }}</li>
         {% endfor %}
     </ul>
-{% endif %}
+    {% endif %}
 
     <h2>Reschedule Class: {{ class_schedule.subject }}</h2>
 
     <form method="POST">
         {% csrf_token %}
 
-        <!-- Date Picker for selecting the date -->
+        <!-- Date Picker -->
         <label for="selected_date">Select Date:</label>
         <input type="date" id="selected_date" name="selected_date" value="{{ form.selected_date.value }}" required>
-        
+
         <hr>
 
         <label>Is this class Online or Offline?</label>
-        <input type="radio" id="online" name="is_online" value="True" {% if form.initial.is_online %}checked{% endif %}> 
+        <input type="radio" id="online" name="is_online" value="True" {% if form.initial.is_online %}checked{% endif %}>
         <label for="online" style="display: inline;">Online</label>
-        <input type="radio" id="offline" name="is_online" value="False" {% if not form.initial.is_online %}checked{% endif %}> 
+        <input type="radio" id="offline" name="is_online" value="False" {% if not form.initial.is_online %}checked{% endif %}>
         <label for="offline" style="display: inline;">Offline</label>
 
         <hr>
@@ -132,9 +132,8 @@
         </div>
 
         <div id="offline-fields" style="display: {% if not form.initial.is_online %}block{% else %}none{% endif %};">
-            <!-- Select Room Button -->
             <a href="http://127.0.0.1:8000/routine/available-slots/" class="select-room-btn">Select Room</a>
-            
+
             <label for="offline_duration">Offline Duration (minutes)</label>
             {{ form.offline_duration }}
         </div>
@@ -150,7 +149,7 @@
 
     <script>
         document.querySelectorAll('input[name="is_online"]').forEach((input) => {
-            input.addEventListener('change', function() {
+            input.addEventListener('change', function () {
                 if (this.value === 'True') {
                     document.getElementById('online-fields').style.display = 'block';
                     document.getElementById('offline-fields').style.display = 'none';
@@ -161,7 +160,5 @@
             });
         });
     </script>
-    
-
 </body>
 </html>
