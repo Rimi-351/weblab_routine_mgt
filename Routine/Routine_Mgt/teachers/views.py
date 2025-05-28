@@ -1,7 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages  # Import messages module for success notifications
 from .models import ClassSchedule, Reschedule, Teacher
 from .forms import RescheduleForm
-from routine.models import Routine, Notification  # ← import Routine & Notification
+from routine.models import Routine, Notification
 
 def teacher_list(request):
     teachers = Teacher.objects.all()
@@ -15,8 +16,11 @@ def teacher_detail(request, teacher_id):
 def reschedule_class(request, schedule_id):
     class_schedule = get_object_or_404(ClassSchedule, id=schedule_id)
 
+    # Try to get the existing reschedule or create a new one if none exists
+    existing_reschedule = Reschedule.objects.filter(class_schedule=class_schedule).first()
+
     if request.method == 'POST':
-        form = RescheduleForm(request.POST)
+        form = RescheduleForm(request.POST, instance=existing_reschedule)
         if form.is_valid():
             rescheduled = form.save(commit=False)
             rescheduled.class_schedule = class_schedule
@@ -43,8 +47,13 @@ def reschedule_class(request, schedule_id):
             except Routine.DoesNotExist:
                 pass
 
+            # Success message and redirect
+            messages.success(request, "Class rescheduled successfully.")
             return redirect('teacher_list')
+        else:
+            # Error message if form is not valid
+            messages.error(request, "Failed to reschedule class. Please check the form.")
     else:
-        form = RescheduleForm()
+        form = RescheduleForm(instance=existing_reschedule)
 
     return render(request, 'teachers/reschedule_class.html', {'form': form, 'class_schedule': class_schedule})

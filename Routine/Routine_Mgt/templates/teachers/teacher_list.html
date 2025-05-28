@@ -5,14 +5,68 @@
 <head>
     <meta charset="UTF-8">
     <title>Teachers</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color:white; /* deeper pastel lavender */
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        li {
+            background-color: #f3e8ff; /* lighter pastel row */
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        li:hover {
+            background-color: #ddc8ff; /* slightly deeper on hover */
+        }
+
+        a {
+            text-decoration: none;
+            background-color: #b68aff; /* deeper button */
+            color: white;
+            padding: 8px 14px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        a:hover {
+            background-color: #9e6be6; /* button hover */
+        }
+
+        li:last-child {
+            margin-bottom: 0;
+        }
+    </style>
 </head>
 <body>
     <h1>Teacher List</h1>
     <ul>
         {% for teacher in teachers %}
             <li>
-                {{ teacher.name }} 
-                - <a href="{% url 'teacher_detail' teacher.id %}">View Courses & Reschedule</a>
+                {{ teacher.name }}
+                <a href="{% url 'teacher_detail' teacher.id %}">View Courses & Reschedule</a>
             </li>
         {% empty %}
             <li>No teachers available.</li>
@@ -20,4 +74,3 @@
     </ul>
 </body>
 </html>
-
