@@ -5,6 +5,7 @@ from .utils import get_today_routines
 from courses.models import Course
 from teachers.models import Teacher
 from django.utils import timezone
+from collections import defaultdict
 
 def add_slot_view(request):
     if request.method == 'POST':
@@ -39,42 +40,41 @@ def routine_home_view(request):
 
 
 def available_slots_view(request):
-    # Define the days of the week
+    from collections import OrderedDict
+
     days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    
-    # Fetch all rooms and slots
     rooms = Room.objects.all()
-    slots = Slot.objects.all()
 
-    # Create an empty list to hold the time slots (e.g., 9:00-10:20)
-    time_slots = Slot.objects.order_by('start_time').distinct()
+    # Unique time ranges
+    unique_time_ranges = []
+    seen = set()
+    for slot in Slot.objects.order_by('start_time', 'end_time'):
+        key = (slot.start_time, slot.end_time)
+        if key not in seen:
+            seen.add(key)
+            unique_time_ranges.append({'start_time': slot.start_time, 'end_time': slot.end_time})
 
-    # List to store availability
     weekly_availability = []
 
     for day in days_of_week:
-        # Find all slots for the current day
-        day_slots = Slot.objects.filter(day=day)
+        for time_range in unique_time_ranges:
+            matching_slots = Slot.objects.filter(day=day, start_time=time_range['start_time'], end_time=time_range['end_time'])
 
-        for slot in day_slots:
-            # Get booked rooms for the current day and time slot
-            booked_rooms = Routine.objects.filter(slot=slot, status='scheduled').values_list('room', flat=True)
+            available_rooms = set(rooms)
+            for slot in matching_slots:
+                booked_rooms = Routine.objects.filter(slot=slot, status='scheduled').values_list('room', flat=True)
+                available_rooms -= set(Room.objects.filter(id__in=booked_rooms))
 
-            # Find rooms that are not booked for this slot
-            available_rooms = rooms.exclude(id__in=booked_rooms)
-
-            # Append each availability record to the list
             weekly_availability.append({
                 'day': day,
-                'slot': slot,
+                'slot': time_range,
                 'available_rooms': available_rooms,
             })
 
-    # Pass both weekly_availability and time_slots to the template
     return render(request, 'routine/available_slots.html', {
         'weekly_availability': weekly_availability,
         'days_of_week': days_of_week,
-        'time_slots': time_slots,
+        'time_slots': unique_time_ranges,
     })
 
 
@@ -92,11 +92,34 @@ def today_routine_view(request):
     })
 
 
+
+from collections import OrderedDict
+from itertools import groupby
+
 def routine_list_view(request):
-    routines = Routine.objects.all().order_by('slot__day', 'slot__start_time')
-    return render(request, 'routine/routine_list.html', {
+    routines = Routine.objects.select_related('course', 'teacher', 'room', 'slot').all()
+
+    # Group slots by unique time ranges
+    all_slots = Slot.objects.order_by('start_time', 'end_time')
+    unique_time_ranges = []
+    seen = set()
+    for slot in all_slots:
+        key = (slot.start_time, slot.end_time)
+        if key not in seen:
+            seen.add(key)
+            unique_time_ranges.append(key)
+
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+    context = {
         'routines': routines,
-    })
+        'days': days,
+        'time_ranges': unique_time_ranges,  # only unique time slots
+    }
+    return render(request, 'routine/routine_list.html', context)
+
+
+
 
 
 def routine_create_view(request):
