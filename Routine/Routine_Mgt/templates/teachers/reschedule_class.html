@@ -15,6 +15,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             border-radius: 10px;
         }
+
         h2 {
             text-align: center;
             color: #00509e;
@@ -43,6 +44,7 @@
             box-sizing: border-box;
             transition: border-color 0.3s ease;
         }
+
         input[type="date"]:focus,
         input[type="text"]:focus,
         input[type="time"]:focus,
@@ -66,11 +68,12 @@
             vertical-align: middle;
             cursor: pointer;
         }
-        label[for="online"],
-        label[for="offline"] {
+
+        label[for^="id_is_online"] {
             margin-right: 15px;
             cursor: pointer;
             font-weight: 600;
+            display: inline;
         }
 
         /* Available Slots button */
@@ -120,21 +123,46 @@
             padding: 0;
             margin-bottom: 20px;
         }
+
         .messages li {
             padding: 12px 15px;
             border-radius: 5px;
             margin-bottom: 10px;
             font-weight: 600;
         }
+
         .messages li.error {
             background-color: #f8d7da;
             color: #842029;
             border: 1px solid #f5c2c7;
         }
+
         .messages li.success {
             background-color: #d1e7dd;
             color: #0f5132;
             border: 1px solid #badbcc;
+        }
+
+        /* Error messages below individual fields */
+        .error {
+            color: #842029;
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            padding: 6px 10px;
+            margin-top: 4px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        /* Invalid input styling */
+        input:invalid, select:invalid, textarea:invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+        }
+
+        /* Smooth transitions */
+        input, select, textarea {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
     </style>
 </head>
@@ -149,70 +177,102 @@
 
     <h2>Reschedule Class: {{ class_schedule.subject }}</h2>
 
-    <form method="POST">
+    <form method="POST" novalidate>
         {% csrf_token %}
 
         <!-- Date Picker -->
-        <label for="reschedule_date">Select Date:</label>
-        <input type="date" id="reschedule_date" name="reschedule_date" value="{{ form.reschedule_date.value }}" required>
+        <label for="id_reschedule_date">Select Date:</label>
+        {{ form.reschedule_date }}
+        {% if form.reschedule_date.errors %}
+            <div class="error">{{ form.reschedule_date.errors|striptags }}</div>
+        {% endif %}
 
         <hr>
 
         <!-- Online / Offline -->
         <label>Is this class Online or Offline?</label>
-        <input type="radio" id="online" name="is_online" value="True" {% if form.initial.is_online %}checked{% endif %}>
-        <label for="online" style="display: inline;">Online</label>
-        <input type="radio" id="offline" name="is_online" value="False" {% if not form.initial.is_online %}checked{% endif %}>
-        <label for="offline" style="display: inline;">Offline</label>
+        {% for radio in form.is_online %}
+            {{ radio.tag }} {{ radio.choice_label }}
+        {% endfor %}
+        {% if form.is_online.errors %}
+            <div class="error">{{ form.is_online.errors|striptags }}</div>
+        {% endif %}
 
         <hr>
 
-        <div id="online-fields" style="display: {% if form.initial.is_online %}block{% else %}none{% endif %};">
-            <label for="online_duration">Online Duration (minutes)</label>
+        <div id="online-fields" style="display: none;">
+            <label for="id_online_duration">Online Duration (minutes)</label>
             {{ form.online_duration }}
+            {% if form.online_duration.errors %}
+                <div class="error">{{ form.online_duration.errors|striptags }}</div>
+            {% endif %}
         </div>
 
-        <div id="offline-fields" style="display: {% if not form.initial.is_online %}block{% else %}none{% endif %};">
+        <div id="offline-fields" style="display: none;">
             <!-- Available Slots button -->
             <a href="http://127.0.0.1:8000/routine/available-slots/" class="available-slots-btn" target="_blank" rel="noopener noreferrer">Available Slots</a>
 
             <!-- Room Number input -->
-            <label for="room">Room Number</label>
-            <input type="text" id="room" name="room" value="{{ form.room.value|default_if_none:'' }}" placeholder="Enter room number" required>
-            
-            <label for="offline_duration">Offline Duration (minutes)</label>
+            <label for="id_room">Room Number</label>
+            {{ form.room }}
+            {% if form.room.errors %}
+                <div class="error">{{ form.room.errors|striptags }}</div>
+            {% endif %}
+
+            <label for="id_offline_duration">Offline Duration (minutes)</label>
             {{ form.offline_duration }}
+            {% if form.offline_duration.errors %}
+                <div class="error">{{ form.offline_duration.errors|striptags }}</div>
+            {% endif %}
         </div>
 
-        <label for="new_start_time">New Start Time</label>
+        <label for="id_new_start_time">New Start Time</label>
         {{ form.new_start_time }}
+        {% if form.new_start_time.errors %}
+            <div class="error">{{ form.new_start_time.errors|striptags }}</div>
+        {% endif %}
 
-        <label for="new_end_time">New End Time</label>
+        <label for="id_new_end_time">New End Time</label>
         {{ form.new_end_time }}
+        {% if form.new_end_time.errors %}
+            <div class="error">{{ form.new_end_time.errors|striptags }}</div>
+        {% endif %}
 
         <button type="submit">Save Changes</button>
     </form>
 
     <script>
-        document.querySelectorAll('input[name="is_online"]').forEach((input) => {
-            input.addEventListener('change', function () {
-                if (this.value === 'True') {
-                    document.getElementById('online-fields').style.display = 'block';
-                    document.getElementById('offline-fields').style.display = 'none';
-                    document.getElementById('room').required = false;
-                } else {
-                    document.getElementById('online-fields').style.display = 'none';
-                    document.getElementById('offline-fields').style.display = 'block';
-                    document.getElementById('room').required = true;
-                }
-            });
+        function toggleFields() {
+            const onlineRadio = document.getElementById('id_is_online_0');
+            const offlineRadio = document.getElementById('id_is_online_1');
+            const onlineFields = document.getElementById('online-fields');
+            const offlineFields = document.getElementById('offline-fields');
+            const roomInput = document.getElementById('id_room');
 
-            // Trigger initial check on page load
-            if (document.getElementById('online').checked) {
-                document.getElementById('room').required = false;
-            } else {
-                document.getElementById('room').required = true;
+            if (onlineRadio.checked) {
+                onlineFields.style.display = 'block';
+                offlineFields.style.display = 'none';
+                roomInput.required = false;
+                // Make online_duration required
+                document.getElementById('id_online_duration').required = true;
+                document.getElementById('id_offline_duration').required = false;
+            } else if (offlineRadio.checked) {
+                onlineFields.style.display = 'none';
+                offlineFields.style.display = 'block';
+                roomInput.required = true;
+                document.getElementById('id_online_duration').required = false;
+                document.getElementById('id_offline_duration').required = true;
             }
+        }
+
+        // Attach event listeners to radio buttons
+        document.querySelectorAll('input[name="is_online"]').forEach((input) => {
+            input.addEventListener('change', toggleFields);
+        });
+
+        // On page load, check which radio is selected and toggle accordingly
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleFields();
         });
     </script>
 </body>
