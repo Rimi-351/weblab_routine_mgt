@@ -1,120 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Reschedule Class</title>
     <style>
+        /* Reset and basic styling */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #e6f2ff;  /* soft pastel blue background */
-            margin: 0;
-            padding: 30px;
-            color: #333; /* dark gray text */
+            background-color: #f4f7f8;
+            color: #333;
+            margin: 40px auto;
+            max-width: 600px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
         }
-
         h2 {
             text-align: center;
-            color: #003366; /* deep navy blue */
-            margin-bottom: 25px;
-        }
-
-        form {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #f0f7ff; /* very light blue background */
-            padding: 25px 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 51, 102, 0.1); /* subtle navy shadow */
+            color: #00509e;
+            margin-bottom: 30px;
+            font-weight: 700;
         }
 
         label {
             display: block;
-            margin-top: 15px;
-            margin-bottom: 6px;
-            font-weight: bold;
-            color: #003366; /* deep navy blue */
-        }
-
-        input[type="radio"] {
-            margin-right: 5px;
-            margin-left: 10px;
-            cursor: pointer;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        input[type="datetime-local"],
-        select,
-        textarea,
-        input[type="date"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #87CEEB; /* sky blue border */
-            border-radius: 6px;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        input[type="datetime-local"]:focus,
-        select:focus,
-        textarea:focus,
-        input[type="date"]:focus {
-            border-color: #003366; /* dark navy on focus */
-            outline: none;
-            box-shadow: 0 0 5px #003366aa;
-        }
-
-        button {
-            display: block;
-            width: 100%;
-            background-color: #003366; /* deep navy blue */
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
+            margin-bottom: 8px;
+            font-weight: 600;
             margin-top: 20px;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
+            color: #004080;
         }
 
-        button:hover {
-            background-color: #001f4d; /* darker navy on hover */
+        input[type="date"],
+        input[type="text"],
+        input[type="time"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        input[type="date"]:focus,
+        input[type="text"]:focus,
+        input[type="time"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #00509e;
+            box-shadow: 0 0 5px rgba(0,80,158,0.3);
         }
 
         hr {
-            margin: 20px 0;
+            margin: 25px 0;
             border: none;
-            border-top: 1px solid #cce0ff; /* light blue */
+            border-top: 1px solid #ccc;
         }
 
-        #online-fields,
-        #offline-fields {
-            margin-top: 10px;
+        /* Radio Buttons inline styling */
+        input[type="radio"] {
+            margin-right: 6px;
+            transform: scale(1.2);
+            vertical-align: middle;
+            cursor: pointer;
         }
-
-        .select-room-btn {
-            display: inline-block;
-            background-color: #87CEEB; /* sky blue */
-            color: #003366; /* dark navy */
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-size: 14px;
-            text-decoration: none;
-            margin-top: 10px;
+        label[for="online"],
+        label[for="offline"] {
+            margin-right: 15px;
             cursor: pointer;
             font-weight: 600;
-            transition: background-color 0.3s ease;
         }
 
-        .select-room-btn:hover {
-            background-color: #00509e; /* deeper blue on hover */
+        /* Available Slots button */
+        .available-slots-btn {
+            display: inline-block;
+            background-color: #00509e;
             color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            text-decoration: none;
+            margin-bottom: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 3px 6px rgba(0,80,158,0.3);
+        }
+        .available-slots-btn:hover {
+            background-color: #003366;
+            transform: scale(1.05);
+            box-shadow: 0 5px 10px rgba(0,80,158,0.5);
+        }
+
+        /* Submit button */
+        button[type="submit"] {
+            background-color: #007acc;
+            color: white;
+            font-weight: 700;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 30px;
+            width: 100%;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,122,204,0.4);
+        }
+        button[type="submit"]:hover {
+            background-color: #005f99;
+            box-shadow: 0 6px 14px rgba(0,95,153,0.7);
+        }
+
+        /* Messages */
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        .messages li {
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .messages li.error {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+        .messages li.success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
         }
     </style>
 </head>
@@ -133,11 +153,12 @@
         {% csrf_token %}
 
         <!-- Date Picker -->
-        <label for="selected_date">Select Date:</label>
-        <input type="date" id="selected_date" name="selected_date" value="{{ form.selected_date.value }}" required>
+        <label for="reschedule_date">Select Date:</label>
+        <input type="date" id="reschedule_date" name="reschedule_date" value="{{ form.reschedule_date.value }}" required>
 
         <hr>
 
+        <!-- Online / Offline -->
         <label>Is this class Online or Offline?</label>
         <input type="radio" id="online" name="is_online" value="True" {% if form.initial.is_online %}checked{% endif %}>
         <label for="online" style="display: inline;">Online</label>
@@ -152,8 +173,13 @@
         </div>
 
         <div id="offline-fields" style="display: {% if not form.initial.is_online %}block{% else %}none{% endif %};">
-            <a href="http://127.0.0.1:8000/routine/available-slots/" class="select-room-btn">Select Room</a>
+            <!-- Available Slots button -->
+            <a href="http://127.0.0.1:8000/routine/available-slots/" class="available-slots-btn" target="_blank" rel="noopener noreferrer">Available Slots</a>
 
+            <!-- Room Number input -->
+            <label for="room">Room Number</label>
+            <input type="text" id="room" name="room" value="{{ form.room.value|default_if_none:'' }}" placeholder="Enter room number" required>
+            
             <label for="offline_duration">Offline Duration (minutes)</label>
             {{ form.offline_duration }}
         </div>
@@ -173,11 +199,20 @@
                 if (this.value === 'True') {
                     document.getElementById('online-fields').style.display = 'block';
                     document.getElementById('offline-fields').style.display = 'none';
+                    document.getElementById('room').required = false;
                 } else {
                     document.getElementById('online-fields').style.display = 'none';
                     document.getElementById('offline-fields').style.display = 'block';
+                    document.getElementById('room').required = true;
                 }
             });
+
+            // Trigger initial check on page load
+            if (document.getElementById('online').checked) {
+                document.getElementById('room').required = false;
+            } else {
+                document.getElementById('room').required = true;
+            }
         });
     </script>
 </body>
