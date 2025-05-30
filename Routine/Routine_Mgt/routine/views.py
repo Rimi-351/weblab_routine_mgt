@@ -35,8 +35,8 @@ def add_slot_view(request):
     return render(request, 'routine/add_slot.html')
 
 
-def routine_home_view(request):
-    return render(request, 'routine/routine_home.html')
+# def routine_home_view(request):
+#     return render(request, 'routine/routine_home.html')
 
 
 def available_slots_view(request):

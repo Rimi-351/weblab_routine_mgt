@@ -1,8 +1,24 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages  # Import messages module for success notifications
 from .models import ClassSchedule, Reschedule, Teacher
-from .forms import RescheduleForm
+from .forms import RescheduleForm, TeacherForm
 from routine.models import Routine, Notification
+from django.contrib.auth.decorators import login_required
+from teachers.models import Teacher, ClassSchedule
+
+@login_required
+def teacher_dashboard(request):
+    # Get the logged-in user’s Teacher profile
+    teacher = Teacher.objects.get(user=request.user)
+
+    # Get upcoming classes for this teacher
+    schedules = ClassSchedule.objects.filter(teacher=teacher).order_by('date', 'start_time')
+
+    context = {
+        'teacher': teacher,
+        'schedules': schedules,
+    }
+    return render(request, 'teachers/teacher_dashboard.html', context)
 
 def teacher_list(request):
     teachers = Teacher.objects.all()
@@ -57,3 +73,61 @@ def reschedule_class(request, schedule_id):
         form = RescheduleForm(instance=existing_reschedule)
 
     return render(request, 'teachers/reschedule_class.html', {'form': form, 'class_schedule': class_schedule})
+
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+from django.conf import settings
+
+def add_teacher(request):
+    if request.method == 'POST':
+        form = TeacherForm(request.POST)
+        if form.is_valid():
+            # Generate a random password
+            random_password = get_random_string(length=8)
+            email = form.cleaned_data['email']
+            username = email.split('@')[0]  # You can customize this
+
+            # Create user
+            user = User.objects.create_user(username=username, email=email, password=random_password)
+            
+            # Create teacher
+            teacher = form.save(commit=False)
+            teacher.user = user
+            teacher.save()
+
+            # Send email
+            send_mail(
+                subject='Your Teacher Account Credentials',
+                message=f"Dear {teacher.name},\n\nYour account has been created.\n\nLogin Credentials:\nUsername: {username}\nPassword: {random_password}\n\nPlease log in and change your password.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+
+            messages.success(request, '✅ Teacher added and credentials sent via email!')
+            return redirect('teacher_list')
+    else:
+        form = TeacherForm()
+
+    return render(request, 'teachers/add_teacher.html', {'form': form})
+
+def edit_teacher(request, pk):
+    teacher = get_object_or_404(Teacher, pk=pk)
+    if request.method == 'POST':
+        form = TeacherForm(request.POST, instance=teacher)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Teacher updated successfully.')
+            return redirect('teacher_list')
+    else:
+        form = TeacherForm(instance=teacher)
+    return render(request, 'teachers/edit_teacher.html', {'form': form})
+
+def delete_teacher(request, pk):
+    teacher = get_object_or_404(Teacher, pk=pk)
+    if request.method == 'POST':
+        teacher.delete()
+        messages.success(request, 'Teacher deleted successfully.')
+        return redirect('teacher_list')
+    return render(request, 'teachers/delete_teacher.html', {'teacher': teacher})

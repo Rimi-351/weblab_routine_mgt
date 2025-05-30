@@ -5,6 +5,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout
 from django.contrib import messages
 from .forms import CustomUserCreationForm
+from teachers.models import Teacher
+from django.contrib.auth.models import User
+
 def add_course(request):
     if request.method == 'POST':
         form = CourseForm(request.POST)
@@ -61,12 +64,24 @@ def user_login(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, "Login successful!")
-            return redirect('/')
+
+            # Check user role
+            if user.is_superuser:
+                return redirect('/admin-dashboard/')  # or your custom admin dashboard
+            else:
+                try:
+                    teacher = Teacher.objects.get(user=user)
+                    return redirect('teacher_dashboard')  # create this named URL
+                except Teacher.DoesNotExist:
+                    messages.error(request, "User is not assigned a teacher role.")
+                    logout(request)
+                    return redirect('/')
         else:
             messages.error(request, "Invalid username or password.")
     else:
         form = AuthenticationForm()
     return render(request, 'courses/login.html', {'form': form})
+
 
 def user_logout(request):
     logout(request)

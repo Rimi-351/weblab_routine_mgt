@@ -7,7 +7,6 @@ class Teacher(models.Model):
     email = models.EmailField(unique=True)
     designation = models.CharField(max_length=50)
     department = models.CharField(max_length=100, default="CSE")
-
     def __str__(self):
         return self.name
 
