@@ -1,10 +1,14 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib import messages
 from .models import ClassSchedule, Reschedule, Teacher
 from .forms import RescheduleForm, TeacherForm
 from routine.models import Routine, Notification
 from django.contrib.auth.decorators import login_required
 from teachers.models import Teacher, ClassSchedule
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+from django.conf import settings
 
 @login_required
 def teacher_dashboard(request):
@@ -81,37 +85,31 @@ def reschedule_class(request, schedule_id):
     })
 
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.utils.crypto import get_random_string
-from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .forms import TeacherForm
 
 def add_teacher(request):
     if request.method == 'POST':
         form = TeacherForm(request.POST)
         if form.is_valid():
-            # Generate a random password
-            random_password = get_random_string(length=8)
             email = form.cleaned_data['email']
-            username = email.split('@')[0]  # You can customize this
+            name = form.cleaned_data['name']
+            username = email.split('@')[0]
 
-            # Create user
-            user = User.objects.create_user(username=username, email=email, password=random_password)
-            
-            # Create teacher
+            # Create Django user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password='cse1234'
+            )
+
+            # Create teacher profile linked to user
             teacher = form.save(commit=False)
             teacher.user = user
             teacher.save()
 
-            # Send email
-            send_mail(
-                subject='Your Teacher Account Credentials',
-                message=f"Dear {teacher.name},\n\nYour account has been created.\n\nLogin Credentials:\nUsername: {username}\nPassword: {random_password}\n\nPlease log in and change your password.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                fail_silently=False,
-            )
-
-            messages.success(request, '✅ Teacher added and credentials sent via email!')
+            messages.success(request, f'✅ Teacher "{teacher.name}" added with username: {username} and password: cse1234')
             return redirect('teacher_list')
     else:
         form = TeacherForm()
