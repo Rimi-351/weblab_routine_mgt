@@ -8,4 +8,5 @@ urlpatterns = [
     path('list/', views.routine_list_view, name='routine_list'),
     path('create/', views.routine_create_view, name='routine_create'),
     path('add-slot/', views.add_slot_view, name='add_slot'),  # New URL for adding a slot
+    path('', views.routine_home_view, name='routine_home'),
 ]

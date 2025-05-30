@@ -193,3 +193,17 @@ def reschedule_class_view(request, schedule_id):
     return render(request, 'routine/reschedule_class.html', {
         'routine': routine,
     })
+from django.utils import timezone
+
+def routine_home_view(request):
+    today = timezone.now().date()
+    total_routines = Routine.objects.count()
+    total_slots = Slot.objects.count()
+    total_rooms = Room.objects.count()
+
+    return render(request, 'routine/routine_home.html', {
+        'today': today,
+        'total_routines': total_routines,
+        'total_slots': total_slots,
+        'total_rooms': total_rooms,
+    })
