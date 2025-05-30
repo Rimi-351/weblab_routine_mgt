@@ -2,33 +2,57 @@
 {% block title %}Teacher Dashboard{% endblock %}
 
 {% block content %}
-<h2>Welcome, {{ teacher.name }}</h2>
-<p>Email: {{ teacher.email }}</p>
-<p>Department: {{ teacher.department }}</p>
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h2>Welcome, {{ teacher.name }}</h2>
+        <p><strong>Email:</strong> {{ teacher.email }}</p>
+        <p><strong>Department:</strong> {{ teacher.department }}</p>
+    </div>
 
-<h3>Your Upcoming Classes</h3>
-{% if schedules %}
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Subject</th>
-                <th>Date</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for schedule in schedules %}
-            <tr>
-                <td>{{ schedule.subject }}</td>
-                <td>{{ schedule.date }}</td>
-                <td>{{ schedule.start_time }}</td>
-                <td>{{ schedule.end_time }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>No upcoming classes scheduled.</p>
-{% endif %}
+    <h3 class="text-center mb-4">Your Upcoming Classes</h3>
+
+    {% if schedules %}
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered text-center">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Subject</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in schedules %}
+                    <tr>
+                        <td>{{ schedule.subject }}</td>
+                        <td>{{ schedule.date }}</td>
+                        <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                        <td>
+                            <a href="{% url 'reschedule_class' schedule.id %}" class="btn btn-sm btn-outline-primary">
+                                Reschedule
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-center text-muted">No upcoming classes scheduled.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'teacher_list' %}" class="btn btn-secondary me-2">← Back to Teacher List</a>
+
+        <form action="{% url 'logout' %}" method="post" class="d-inline-block">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Log Out</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
+
+
+
+

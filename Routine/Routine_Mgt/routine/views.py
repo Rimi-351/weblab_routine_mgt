@@ -6,6 +6,8 @@ from courses.models import Course
 from teachers.models import Teacher
 from django.utils import timezone
 from collections import defaultdict
+from collections import OrderedDict
+from itertools import groupby
 
 def add_slot_view(request):
     if request.method == 'POST':
@@ -93,8 +95,6 @@ def today_routine_view(request):
 
 
 
-from collections import OrderedDict
-from itertools import groupby
 
 def routine_list_view(request):
     routines = Routine.objects.select_related('course', 'teacher', 'room', 'slot').all()
