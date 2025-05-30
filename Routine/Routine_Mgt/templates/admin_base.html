@@ -1,0 +1,45 @@
+<!-- templates/admin_base.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}" defer></script>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row min-vh-100">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse p-3">
+            <div class="position-sticky">
+                <h4 class="text-white mb-4">Admin Panel</h4>
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'course_list' %}">Manage Courses</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'teacher_list' %}">Manage Teachers</a></li>
+                    
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'notifications' %}">Notifications</a></li>
+                    <li class="nav-item"><a class="nav-link text-danger" href="{% url 'logout' %}">Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

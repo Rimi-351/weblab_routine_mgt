@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block content %}
+<h2>Welcome, {{ teacher.name }}</h2>
+<p>Email: {{ teacher.email }}</p>
+<p>Department: {{ teacher.department }}</p>
+
+<h3>Your Upcoming Classes</h3>
+{% if schedules %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for schedule in schedules %}
+            <tr>
+                <td>{{ schedule.subject }}</td>
+                <td>{{ schedule.date }}</td>
+                <td>{{ schedule.start_time }}</td>
+                <td>{{ schedule.end_time }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No upcoming classes scheduled.</p>
+{% endif %}
+{% endblock %}
