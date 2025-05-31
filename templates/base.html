@@ -1,51 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}Class routine{% endblock %}</title>
     
+    <!-- Bootstrap Local Integration -->
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
     <script src="{% static 'js/bootstrap.bundle.min.js' %}" defer></script>
 
     <style>
         body {
             background-color: #f8f9fa;
         }
+        /* Optional: Adjust navbar brand img size */
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+        }
     </style>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <!-- Navbar brand (optional) -->
-            <a class="navbar-brand" href="#">Class Routine</a>
+        <div class="container-fluid px-3">
+            <!-- Logo on the left -->
+             
+                 <!-- full width container with horizontal padding -->
+                   <a class="navbar-brand" href="{% url 'routine_homepage' %}">
+                       <!-- <img src="{% static 'Images/JU_logo2.jpg' %}" alt="Logo" /> -->
+                            Class Routine
+                    </a>
+                     <!-- rest of navbar -->
+                
+    
 
-            <!-- Toggle button for mobile -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <!-- <a class="navbar-brand" href="#">
+                <img src="{% static 'Images/JU_logo2.jpg' %}" alt="Logo" />
+                Class Routine
+            </a> -->
+
+            <!-- Navbar toggler button for mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <!-- Collapsible content -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+            <!-- Navigation links (right aligned) -->
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                    </li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">Register</a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                    </li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
+
+    <!-- Image after navbar -->
+    <!-- Full width image that covers the width, with fixed height and object-fit to cover -->
+    
+
+
+
+    <!-- <div class="container mt-3 text-center">
+        <img src="{% static 'Images/CSE.webp' %}" alt="Banner Image" style="max-width: 2600px; width: 100%; height: 600px;" />
+
+    </div> -->
+
 
     <!-- Main Content -->
     <div class="container mt-4">

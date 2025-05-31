@@ -13,7 +13,6 @@
             {% for routine in today_routine %}
                 <li class="list-group-item">
                     <strong>{{ routine.course.title }}</strong> by {{ routine.teacher.name }} at {{ routine.slot.start_time }}
-                    <p class="mt-2">{{ routine.course.description }}</p>
                 </li>
             {% empty %}
                 <li class="list-group-item">No classes scheduled for today.</li>

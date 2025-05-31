@@ -1,7 +1,9 @@
-{% load custom_filters %}
 
+{% extends 'base.html' %}
+
+{% block content %}
 <h1 class="text-center my-4">Available slots</h1>
-<table border=1 class="table table-bordered table-striped">
+<table border="1" class="table table-bordered table-striped">
     <thead class="thead-dark">
         <tr>
             <th class="text-center">Time Slot</th>
@@ -16,17 +18,17 @@
                 <td class="text-center">{{ time_slot.start_time }} - {{ time_slot.end_time }}</td>
                 {% for day in days_of_week %}
                     <td>
-                        {% for availability in weekly_availability|get_day_availability:day %}
-                            {% if availability.slot == time_slot %}
-                                <ul class="list-unstyled">
+                        <ul class="list-unstyled">
+                            {% for availability in weekly_availability %}
+                                {% if availability.day == day and availability.slot.start_time == time_slot.start_time and availability.slot.end_time == time_slot.end_time %}
                                     {% for room in availability.available_rooms %}
                                         <li>{{ room.number }}</li>
                                     {% empty %}
                                         <li class="text-muted">No available rooms</li>
                                     {% endfor %}
-                                </ul>
-                            {% endif %}
-                        {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
                     </td>
                 {% endfor %}
             </tr>
@@ -34,7 +36,6 @@
     </tbody>
 </table>
 
-<!-- Add some styling here for a better layout -->
 <style>
     .table {
         width: 100%;
@@ -50,7 +51,7 @@
         color: white;
     }
     th {
-        background-color:rgb(3, 14, 24);
+        background-color: rgb(3, 14, 24);
     }
     td {
         background-color: #fff;
@@ -68,3 +69,4 @@
         margin-bottom: 1.5rem !important;
     }
 </style>
+{% endblock %}

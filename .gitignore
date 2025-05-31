@@ -1,2 +1,26 @@
-*.pyc
+# Python cache files
 __pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Database
+db.sqlite3
+
+# System files
+Thumbs.db
+.DS_Store
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# OS folders/files (usually not needed in repo)
+AppData/
+Cookies/
+Documents/
+Downloads/
+Music/
+Pictures/
+Videos/

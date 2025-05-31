@@ -1,47 +1,33 @@
 from django import forms
 from .models import Reschedule
+from django.core.exceptions import ValidationError
+from .models import Teacher
 
 class RescheduleForm(forms.ModelForm):
     class Meta:
         model = Reschedule
-        fields = ['is_online', 'online_duration', 'room', 'new_start_time', 'new_end_time']
+        fields = ['new_start_time', 'new_end_time']  # Removed 'reason' from the fields
 
+    # Custom validation to ensure that the end time is later than the start time
     def clean(self):
         cleaned_data = super().clean()
-        is_online = cleaned_data.get('is_online')
-        online_duration = cleaned_data.get('online_duration')
-        room = cleaned_data.get('room')
+        new_start_time = cleaned_data.get('new_start_time')
+        new_end_time = cleaned_data.get('new_end_time')
 
-        # Validation
-        if is_online:
-            if room:
-                self.add_error('room', 'Room should be empty for online classes.')
-            if not online_duration:
-                self.add_error('online_duration', 'Online duration is required for online classes.')
-        else:
-            if online_duration:
-                self.add_error('online_duration', 'Online duration should be empty for offline classes.')
-            if not room:
-                self.add_error('room', 'Room is required for offline classes.')
-
+        if new_start_time and new_end_time:
+            if new_start_time >= new_end_time:
+                raise ValidationError("End time must be later than start time.")
+        
         return cleaned_data
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        # Make fields required based on instance data
-        is_online = None
-        if self.instance and self.instance.pk:
-            is_online = self.instance.is_online
-        if 'data' in kwargs:
-            is_online = kwargs['data'].get('is_online') == 'True'
 
-        if is_online:
-            self.fields['online_duration'].required = True
-            self.fields['room'].required = False
-        else:
-            self.fields['online_duration'].required = False
-            self.fields['room'].required = True
-
-        self.fields['new_start_time'].required = True
-        self.fields['new_end_time'].required = True
+class TeacherForm(forms.ModelForm):
+    class Meta:
+        model = Teacher
+        fields = ['name', 'email', 'designation', 'department']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'designation': forms.TextInput(attrs={'class': 'form-control'}),
+            'department': forms.TextInput(attrs={'class': 'form-control'}),
+        }

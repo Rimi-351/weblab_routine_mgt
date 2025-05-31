@@ -1,56 +1,279 @@
-<!-- teachers/templates/teachers/reschedule_class.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Reschedule Class</title>
+    <style>
+        /* Reset and basic styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f8;
+            color: #333;
+            margin: 40px auto;
+            max-width: 600px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #00509e;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            margin-top: 20px;
+            color: #004080;
+        }
+
+        input[type="date"],
+        input[type="text"],
+        input[type="time"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="date"]:focus,
+        input[type="text"]:focus,
+        input[type="time"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #00509e;
+            box-shadow: 0 0 5px rgba(0,80,158,0.3);
+        }
+
+        hr {
+            margin: 25px 0;
+            border: none;
+            border-top: 1px solid #ccc;
+        }
+
+        /* Radio Buttons inline styling */
+        input[type="radio"] {
+            margin-right: 6px;
+            transform: scale(1.2);
+            vertical-align: middle;
+            cursor: pointer;
+        }
+
+        label[for^="id_is_online"] {
+            margin-right: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline;
+        }
+
+        /* Available Slots button */
+        .available-slots-btn {
+            display: inline-block;
+            background-color: #00509e;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            text-decoration: none;
+            margin-bottom: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 3px 6px rgba(0,80,158,0.3);
+        }
+        .available-slots-btn:hover {
+            background-color: #003366;
+            transform: scale(1.05);
+            box-shadow: 0 5px 10px rgba(0,80,158,0.5);
+        }
+
+        /* Submit button */
+        button[type="submit"] {
+            background-color: #007acc;
+            color: white;
+            font-weight: 700;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 30px;
+            width: 100%;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,122,204,0.4);
+        }
+        button[type="submit"]:hover {
+            background-color: #005f99;
+            box-shadow: 0 6px 14px rgba(0,95,153,0.7);
+        }
+
+        /* Messages */
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        .messages li {
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .messages li.error {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        .messages li.success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        /* Error messages below individual fields */
+        .error {
+            color: #842029;
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            padding: 6px 10px;
+            margin-top: 4px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        /* Invalid input styling */
+        input:invalid, select:invalid, textarea:invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+        }
+
+        /* Smooth transitions */
+        input, select, textarea {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+    </style>
 </head>
 <body>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
     <h2>Reschedule Class: {{ class_schedule.subject }}</h2>
 
-    <form method="POST">
+    <form method="POST" novalidate>
         {% csrf_token %}
 
-        <label for="is_online">Is this class Online or Offline?</label><br>
-        <input type="radio" id="online" name="is_online" value="True" {% if form.initial.is_online %}checked{% endif %}> Online
-        <input type="radio" id="offline" name="is_online" value="False" {% if not form.initial.is_online %}checked{% endif %}> Offline
-<hr>
-        <div id="online-fields" style="display: {% if form.initial.is_online %}block{% else %}none{% endif %};">
-            <label for="online_duration">Online Duration (minutes)</label><br>
+        <!-- Date Picker -->
+        <label for="id_reschedule_date">Select Date:</label>
+        {{ form.reschedule_date }}
+        {% if form.reschedule_date.errors %}
+            <div class="error">{{ form.reschedule_date.errors|striptags }}</div>
+        {% endif %}
+
+        <hr>
+
+        <!-- Online / Offline -->
+        <label>Is this class Online or Offline?</label>
+        {% for radio in form.is_online %}
+            {{ radio.tag }} {{ radio.choice_label }}
+        {% endfor %}
+        {% if form.is_online.errors %}
+            <div class="error">{{ form.is_online.errors|striptags }}</div>
+        {% endif %}
+
+        <hr>
+
+        <div id="online-fields" style="display: none;">
+            <label for="id_online_duration">Online Duration (minutes)</label>
             {{ form.online_duration }}
+            {% if form.online_duration.errors %}
+                <div class="error">{{ form.online_duration.errors|striptags }}</div>
+            {% endif %}
         </div>
 
-        <div id="offline-fields" style="display: {% if not form.initial.is_online %}block{% else %}none{% endif %};">
-            <label for="room">Room</label><br>
+        <div id="offline-fields" style="display: none;">
+            <!-- Available Slots button -->
+            <a href="http://127.0.0.1:8000/routine/available-slots/" class="available-slots-btn" target="_blank" rel="noopener noreferrer">Available Slots</a>
+
+            <!-- Room Number input -->
+            <label for="id_room">Room Number</label>
             {{ form.room }}
-            <label for="offline_duration">Offline Duration (minutes)</label><br>
+            {% if form.room.errors %}
+                <div class="error">{{ form.room.errors|striptags }}</div>
+            {% endif %}
+
+            <label for="id_offline_duration">Offline Duration (minutes)</label>
             {{ form.offline_duration }}
+            {% if form.offline_duration.errors %}
+                <div class="error">{{ form.offline_duration.errors|striptags }}</div>
+            {% endif %}
         </div>
 
-        <label for="new_start_time">New Start Time</label><br>
+        <label for="id_new_start_time">New Start Time</label>
         {{ form.new_start_time }}
-<br>
-        <label for="new_end_time">New End Time</label><br>
-        {{ form.new_end_time }}
+        {% if form.new_start_time.errors %}
+            <div class="error">{{ form.new_start_time.errors|striptags }}</div>
+        {% endif %}
 
-        <br><br>
+        <label for="id_new_end_time">New End Time</label>
+        {{ form.new_end_time }}
+        {% if form.new_end_time.errors %}
+            <div class="error">{{ form.new_end_time.errors|striptags }}</div>
+        {% endif %}
+
         <button type="submit">Save Changes</button>
     </form>
 
     <script>
+        function toggleFields() {
+            const onlineRadio = document.getElementById('id_is_online_0');
+            const offlineRadio = document.getElementById('id_is_online_1');
+            const onlineFields = document.getElementById('online-fields');
+            const offlineFields = document.getElementById('offline-fields');
+            const roomInput = document.getElementById('id_room');
+
+            if (onlineRadio.checked) {
+                onlineFields.style.display = 'block';
+                offlineFields.style.display = 'none';
+                roomInput.required = false;
+                // Make online_duration required
+                document.getElementById('id_online_duration').required = true;
+                document.getElementById('id_offline_duration').required = false;
+            } else if (offlineRadio.checked) {
+                onlineFields.style.display = 'none';
+                offlineFields.style.display = 'block';
+                roomInput.required = true;
+                document.getElementById('id_online_duration').required = false;
+                document.getElementById('id_offline_duration').required = true;
+            }
+        }
+
+        // Attach event listeners to radio buttons
         document.querySelectorAll('input[name="is_online"]').forEach((input) => {
-            input.addEventListener('change', function() {
-                if (this.value === 'True') {
-                    document.getElementById('online-fields').style.display = 'block';
-                    document.getElementById('offline-fields').style.display = 'none';
-                } else {
-                    document.getElementById('online-fields').style.display = 'none';
-                    document.getElementById('offline-fields').style.display = 'block';
-                }
-            });
+            input.addEventListener('change', toggleFields);
+        });
+
+        // On page load, check which radio is selected and toggle accordingly
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleFields();
         });
     </script>
-
 </body>
 </html>

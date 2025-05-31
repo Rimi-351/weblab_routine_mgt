@@ -1,0 +1,39 @@
+
+<!-- {% extends 'base.html' %}
+{% block title %}Routine for {{ batch }}{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Routine for Batch {{ batch }}</h2>
+
+<table class="table table-bordered text-center">
+    <thead class="table-primary">
+        <tr>
+            <th>Day / Time</th>
+            {% for start, end in time_ranges %}
+                <th>{{ start|time:"g:i a" }} - {{ end|time:"g:i a" }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for day, routines in routine_map_items %}
+            <tr>
+                <th>{{ day }}</th>
+                {% for routine in routines %}
+                    {% if routine %}
+                        <td>
+                            <strong>{{ routine.course.code }}</strong><br>
+                            {{ routine.teacher.name }}<br>
+                            {{ routine.room.number }}
+                            {% if routine.is_online %}
+                                <br><em>(Online)</em>
+                            {% endif %}
+                        </td>
+                    {% else %}
+                        <td>&mdash;</td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %} -->

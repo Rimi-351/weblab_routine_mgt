@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Routine Homepage{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <img src="{% static 'Images/CSE.webp' %}" 
+         alt="Banner Image" 
+         style="width: 100%; height: 400px; object-fit: cover; display: block;" />
+</div>
+<div class="container text-center mt-5">
+    <h2>Select a Routine</h2>
+    <div class="d-grid gap-3 col-6 mx-auto mt-4">
+        <a href="{% url 'routine_1_2' %}" class="btn btn-primary">1-2</a>
+        <a href="{% url 'routine_2_1' %}" class="btn btn-primary">2-1</a>
+        <a href="{% url 'routine_3_1' %}" class="btn btn-primary">3-1</a>
+        <a href="{% url 'routine_3_2' %}" class="btn btn-primary">3-2</a>
+        <a href="{% url 'routine_4_2' %}" class="btn btn-primary">4-2</a>
+    </div>
+</div>
+{% endblock %}
