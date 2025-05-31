@@ -1,6 +1,6 @@
 from django import forms
-from .models import Reschedule
 from django.core.exceptions import ValidationError
+from .models import Reschedule, Teacher
 
 class RescheduleForm(forms.ModelForm):
     is_online = forms.TypedChoiceField(
@@ -52,3 +52,15 @@ class RescheduleForm(forms.ModelForm):
                 raise ValidationError("Please enter a valid offline duration (minutes).")
 
         return cleaned_data
+
+
+class TeacherForm(forms.ModelForm):
+    class Meta:
+        model = Teacher
+        fields = ['name', 'email', 'designation', 'department']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'designation': forms.TextInput(attrs={'class': 'form-control'}),
+            'department': forms.TextInput(attrs={'class': 'form-control'}),
+        }

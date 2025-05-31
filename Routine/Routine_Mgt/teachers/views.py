@@ -1,8 +1,24 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import ClassSchedule, Reschedule, Teacher
-from .forms import RescheduleForm
+from .forms import RescheduleForm, TeacherForm
 from routine.models import Routine, Notification
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+
+@login_required
+def teacher_dashboard(request):
+    # Get the logged-in user’s Teacher profile
+    teacher = Teacher.objects.get(user=request.user)
+
+    # Get upcoming classes for this teacher
+    schedules = ClassSchedule.objects.filter(teacher=teacher).order_by('date', 'start_time')
+
+    context = {
+        'teacher': teacher,
+        'schedules': schedules,
+    }
+    return render(request, 'teachers/teacher_dashboard.html', context)
 
 def teacher_list(request):
     teachers = Teacher.objects.all()
@@ -63,3 +79,50 @@ def reschedule_class(request, schedule_id):
         'form': form,
         'class_schedule': class_schedule
     })
+
+def add_teacher(request):
+    if request.method == 'POST':
+        form = TeacherForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            name = form.cleaned_data['name']
+            username = email.split('@')[0]
+
+            # Create Django user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password='cse1234'
+            )
+
+            # Create teacher profile linked to user
+            teacher = form.save(commit=False)
+            teacher.user = user
+            teacher.save()
+
+            messages.success(request, f'✅ Teacher "{teacher.name}" added with username: {username} and password: cse1234')
+            return redirect('teacher_list')
+    else:
+        form = TeacherForm()
+
+    return render(request, 'teachers/add_teacher.html', {'form': form})
+
+def edit_teacher(request, pk):
+    teacher = get_object_or_404(Teacher, pk=pk)
+    if request.method == 'POST':
+        form = TeacherForm(request.POST, instance=teacher)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Teacher updated successfully.')
+            return redirect('teacher_list')
+    else:
+        form = TeacherForm(instance=teacher)
+    return render(request, 'teachers/edit_teacher.html', {'form': form})
+
+def delete_teacher(request, pk):
+    teacher = get_object_or_404(Teacher, pk=pk)
+    if request.method == 'POST':
+        teacher.delete()
+        messages.success(request, 'Teacher deleted successfully.')
+        return redirect('teacher_list')
+    return render(request, 'teachers/delete_teacher.html', {'teacher': teacher})
