@@ -1,0 +1,133 @@
+<!-- teachers/templates/teachers/teacher_detail.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ teacher.name }} - Courses</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e6f2ff; /* pastel background */
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto 30px auto;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #87CEEB; /* sky blue */
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        a {
+            text-decoration: none;
+            background-color: #003366; /* deep blue */
+            color: white;
+            padding: 8px 14px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        a:hover {
+            background-color: #002244;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            text-decoration: none;
+            color: white; /* changed to white */
+            font-weight: bold;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #f1f1f1; /* soft light grey on hover */
+        }
+
+        .logout-form {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .logout-form button {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-form button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Courses for {{ teacher.name }}</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for schedule in schedules %}
+                <tr>
+                    <td>{{ schedule.subject }}</td>
+                    <td>{{ schedule.date }}</td>
+                    <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                    <td><a href="{% url 'reschedule_class' schedule.id %}">Reschedule</a></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">No courses available for this teacher.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a class="back-link" href="{% url 'teacher_list' %}">← Back to Teacher List</a>
+
+    <form action="{% url 'logout' %}" method="post" class="logout-form">
+        {% csrf_token %}
+        <button type="submit">Log Out</button>
+    </form>
+</body>
+</html>

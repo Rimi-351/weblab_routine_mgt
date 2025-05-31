@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👩‍🏫 All Teachers</h2>
+        <a href="{% url 'add_teacher' %}" class="btn btn-success">➕ Add Teacher</a>
+    </div>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Designation</th>
+                <th>Department</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for teacher in teachers %}
+            <tr>
+                <td>{{ teacher.id }}</td>
+                <td>{{ teacher.name }}</td>
+                <td>{{ teacher.email }}</td>
+                <td>{{ teacher.designation }}</td>
+                <td>{{ teacher.department }}</td>
+                <td>
+                    <a href="{% url 'edit_teacher' teacher.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="{% url 'delete_teacher' teacher.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center">No teachers found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+<!-- teachers/templates/teachers/teacher_list.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teachers</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color:white; /* deeper pastel lavender */
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        li {
+            background-color: #f3e8ff; /* lighter pastel row */
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        li:hover {
+            background-color: #ddc8ff; /* slightly deeper on hover */
+        }
+
+        a {
+            text-decoration: none;
+            background-color: #b68aff; /* deeper button */
+            color: white;
+            padding: 8px 14px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        a:hover {
+            background-color: #9e6be6; /* button hover */
+        }
+
+        li:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teacher List</h1>
+    <ul>
+        {% for teacher in teachers %}
+            <li>
+                {{ teacher.name }}
+                <a href="{% url 'teacher_detail' teacher.id %}">View Courses & Reschedule</a>
+            </li>
+        {% empty %}
+            <li>No teachers available.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html> -->

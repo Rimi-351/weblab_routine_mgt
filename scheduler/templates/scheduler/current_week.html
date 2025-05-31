@@ -1,0 +1,6 @@
+<h2>Current Academic Week</h2>
+{% if week %}
+  <p><strong>{{ week.label }}</strong>: {{ week.start_date }} to {{ week.end_date }}</p>
+{% else %}
+  <p>No academic week found for today.</p>
+{% endif %}

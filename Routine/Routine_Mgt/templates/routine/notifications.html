@@ -1,0 +1,68 @@
+<!-- routine/notifications.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Notifications</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .notification {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid #3498db;
+            border-radius: 5px;
+        }
+
+        .notification.cancelled {
+            border-left-color: #e74c3c;
+        }
+
+        .notification.rescheduled {
+            border-left-color: #2ecc71;
+        }
+
+        .notification time {
+            display: block;
+            color: #777;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Notifications</h1>
+
+    {% if notifications %}
+        {% for notification in notifications %}
+            {% with message=notification.message|lower %}
+                <div class="notification
+                    {% if 'cancelled' in message %} cancelled
+                    {% elif 'rescheduled' in message %} rescheduled
+                    {% endif %}">
+                    <p>{{ notification.message }}</p>
+                    <time>{{ notification.created_at|date:"F j, Y, g:i a" }}</time>
+                </div>
+            {% endwith %}
+        {% endfor %}
+    {% else %}
+        <p>No notifications available.</p>
+    {% endif %}
+
+    <p><a href="{% url 'routine_list' %}">Back to Home</a></p>
+
+</body>
+
+</html>
