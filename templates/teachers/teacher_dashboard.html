@@ -31,4 +31,8 @@
 {% else %}
     <p>No upcoming classes scheduled.</p>
 {% endif %}
+<!-- ✅ Make Changes Button -->
+<div class="mt-4">
+    <a href="{% url 'teacher_detail' teacher.id %}" class="btn btn-primary">Make Changes</a>
+</div>
 {% endblock %}
