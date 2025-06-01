@@ -1,0 +1,13 @@
+<h2>Today's Class Schedule</h2>
+<ul>
+  {% for entry in entries %}
+    <li>
+      {{ entry.batch.name }} | {{ entry.course.code }} | {{ entry.course.teacher.name }}
+      — {{ entry.start_time }} to {{ entry.end_time }} at 
+      {{ entry.room.name }}{% if entry.is_online %} (Online){% endif %}
+      {% if entry.is_rescheduled %}<strong> (Rescheduled)</strong>{% endif %}
+    </li>
+  {% empty %}
+    <li>No classes scheduled for today.</li>
+  {% endfor %}
+</ul>

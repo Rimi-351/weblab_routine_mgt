@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Routine List{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Routine List</h2>
+
+<table class="table table-bordered text-center">
+    <thead class="table-primary">
+        <tr>
+            <th>Day / Time</th>
+            {% for start, end in time_ranges %}
+                <th>{{ start|time:"g:i a" }} - {{ end|time:"g:i a" }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for day in days %}
+            <tr>
+                <th>{{ day }}</th>
+                {% for start, end in time_ranges %}
+                    <td>
+                        {% with printed=0 %}
+                        {% for routine in routines %}
+                            {% if routine.slot.day == day and routine.slot.start_time == start and routine.slot.end_time == end %}
+                                <strong>{{ routine.course.code }}</strong><br>
+                                {{ routine.teacher.name }}<br>
+                                {{ routine.room.number }}
+                                {% if routine.is_online %}
+                                    <br><em>(Online)</em>
+                                {% endif %}
+                                <br>
+                                {% with printed=1 %}{% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if printed == 0 %}
+                            &mdash;
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
