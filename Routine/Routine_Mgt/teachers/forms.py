@@ -1,23 +1,74 @@
 from django import forms
-from .models import Reschedule
+from django.utils import timezone
+from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
-from .models import Teacher
+from .models import Reschedule, Teacher
 
 class RescheduleForm(forms.ModelForm):
+    is_online = forms.TypedChoiceField(
+        choices=[(True, 'Online'), (False, 'Offline')],
+        coerce=lambda x: x == 'True',
+        widget=forms.RadioSelect
+    )
+
     class Meta:
         model = Reschedule
-        fields = ['new_start_time', 'new_end_time']  # Removed 'reason' from the fields
+        fields = [
+            'reschedule_date',
+            'is_online',
+            'online_duration',
+            'offline_duration',
+            'room',
+            'new_start_time',
+            'new_end_time',
+        ]
+        widgets = {
+            'reschedule_date': forms.DateInput(attrs={'type': 'date'}),
+            'online_duration': forms.NumberInput(attrs={'min': 0}),
+            'offline_duration': forms.NumberInput(attrs={'min': 0}),
+            'room': forms.TextInput(attrs={'placeholder': 'Enter room number'}),
+            'new_start_time': forms.TimeInput(attrs={'type': 'time'}),
+            'new_end_time': forms.TimeInput(attrs={'type': 'time'}),
+        }
 
-    # Custom validation to ensure that the end time is later than the start time
+    def __init__(self, *args, **kwargs):
+        self.class_schedule = kwargs.pop('class_schedule', None)
+        super().__init__(*args, **kwargs)
+
     def clean(self):
         cleaned_data = super().clean()
+        reschedule_date = cleaned_data.get('reschedule_date')
         new_start_time = cleaned_data.get('new_start_time')
         new_end_time = cleaned_data.get('new_end_time')
+        is_online = cleaned_data.get('is_online')
+        room = cleaned_data.get('room')
+        online_duration = cleaned_data.get('online_duration')
+        offline_duration = cleaned_data.get('offline_duration')
 
+        # --- Time validation ---
         if new_start_time and new_end_time:
             if new_start_time >= new_end_time:
-                raise ValidationError("End time must be later than start time.")
-        
+                raise ValidationError("❗ End time must be later than start time.")
+
+        # --- Online/Offline conditional field validation ---
+        if is_online:
+            if not online_duration or online_duration <= 0:
+                raise ValidationError("❗ Please enter a valid online duration (minutes).")
+        else:
+            if not room:
+                raise ValidationError("❗ Please enter the room number for offline classes.")
+            if not offline_duration or offline_duration <= 0:
+                raise ValidationError("❗ Please enter a valid offline duration (minutes).")
+
+        # --- Rescheduled class must be at least 24 hours from now ---
+        if self.class_schedule and reschedule_date and new_start_time:
+            naive_new_class_datetime = datetime.combine(reschedule_date, new_start_time)
+            # Make timezone-aware using Django utility:
+            new_class_datetime = timezone.make_aware(naive_new_class_datetime, timezone.get_current_timezone())
+            now = timezone.now()
+            if new_class_datetime - now < timedelta(hours=24):
+                raise ValidationError("⏰ Rescheduled class must be at least 24 hours from now.")
+
         return cleaned_data
 
 
