@@ -4,6 +4,7 @@ from django.dispatch import receiver
 from courses.models import Course
 from teachers.models import Teacher, ClassSchedule
 from django.utils import timezone
+from datetime import date, timedelta
 
 class Room(models.Model):
     number = models.CharField(max_length=10, unique=True)
@@ -11,22 +12,20 @@ class Room(models.Model):
     def __str__(self):
         return self.number
 
+
 class Slot(models.Model):
     day = models.CharField(max_length=10)
     start_time = models.TimeField()
     end_time = models.TimeField()
     is_available = models.BooleanField(default=True)
-    date = models.DateField(null=True, blank=True)  # Add a date field
+    date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.day} {self.start_time}-{self.end_time}"
 
     def get_slot_details(self):
-        # Display both the start time and end time, and also show the date if available
         time_range = f"{self.start_time} - {self.end_time}"
-        if self.date:
-            return f"{self.day} {time_range} on {self.date.strftime('%d %b %Y')}"
-        return f"{self.day} {time_range} (TBA)"
+        return f"{self.day} {time_range} on {self.date.strftime('%d %b %Y')}" if self.date else f"{self.day} {time_range} (TBA)"
 
 
 class Routine(models.Model):
@@ -50,27 +49,19 @@ class Routine(models.Model):
         return f"{self.course.code} - {self.course.title} by {self.teacher.name} in {self.room.number} on {self.slot}"
 
     def save(self, *args, **kwargs):
-        # If the routine is cancelled, mark the slot as available
         if self.status == 'cancelled':
             self.slot.is_available = True
             self.slot.save()
 
-        # Create or update ClassSchedule when Routine is saved
         if self.status in ['scheduled', 'rescheduled']:
-            day_to_int = {
-                'Monday': 0, 'Tuesday': 1, 'Wednesday': 2,
-                'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6,
-            }
-            from datetime import date, timedelta
+            day_to_int = {'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6}
 
             today = date.today()
             today_weekday = today.weekday()
             class_day = day_to_int.get(self.slot.day)
 
             if class_day is not None:
-                days_ahead = class_day - today_weekday
-                if days_ahead < 0:
-                    days_ahead += 7
+                days_ahead = (class_day - today_weekday) % 7
                 class_date = today + timedelta(days=days_ahead)
 
                 ClassSchedule.objects.update_or_create(
@@ -94,10 +85,10 @@ class Notification(models.Model):
     def __str__(self):
         return self.title
 
-# SIGNAL to create notification on cancellation
+
 @receiver(pre_save, sender=Routine)
 def routine_status_change(sender, instance, **kwargs):
-    if instance.pk:  # if it already exists
+    if instance.pk:
         previous = Routine.objects.get(pk=instance.pk)
         if previous.status != instance.status:
             if instance.status == 'cancelled':

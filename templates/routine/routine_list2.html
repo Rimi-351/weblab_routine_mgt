@@ -22,7 +22,7 @@
                         <td colspan="{{ colspan }}">
                             <strong>{{ routine.course.code }}</strong><br>
                             {{ routine.teacher.name }}<br>
-                            {{ routine.room.number }}
+                            Room: {{ routine.room.number }}
                             {% if routine.is_online %}
                                 <br><em>(Online)</em>
                             {% endif %}
