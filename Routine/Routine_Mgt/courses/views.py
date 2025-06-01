@@ -39,10 +39,32 @@ def edit_course(request, course_id):
 
     return render(request, 'courses/edit_course.html', {'form': form, 'course': course})
 
+# def course_list(request):
+#     courses = Course.objects.all()
+#     return render(request, 'courses/course_list.html', {'courses': courses})
+from .models import Course
+from routine.models import Routine
+from monitor.models import ClassConductRecord
 def course_list(request):
     courses = Course.objects.all()
-    return render(request, 'courses/course_list.html', {'courses': courses})
 
+    course_data = []
+    for course in courses:
+        routines = Routine.objects.filter(course=course)
+        conducted = ClassConductRecord.objects.filter(routine__in=routines, status='conducted').count()
+        cancelled = ClassConductRecord.objects.filter(routine__in=routines, status='cancelled').count()
+        rescheduled = ClassConductRecord.objects.filter(routine__in=routines, status='rescheduled').count()
+
+        course_data.append({
+            'course': course,
+            'conducted': conducted,
+            'cancelled': cancelled,
+            'rescheduled': rescheduled,
+        })
+
+    return render(request, 'courses/course_list.html', {
+        'course_data': course_data
+    })
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -67,7 +89,7 @@ def user_login(request):
 
             # Check user role
             if user.is_superuser:
-                return redirect('/admin-dashboard/')  # or your custom admin dashboard
+                return redirect('/monitor/admin-dashboard/') 
             else:
                 try:
                     teacher = Teacher.objects.get(user=user)

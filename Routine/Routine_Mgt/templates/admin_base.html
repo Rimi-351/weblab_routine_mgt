@@ -22,7 +22,8 @@
                     <li class="nav-item"><a class="nav-link text-white" href="{% url 'admin_dashboard' %}">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="{% url 'course_list' %}">Manage Courses</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="{% url 'teacher_list' %}">Manage Teachers</a></li>
-                    
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'teacher_list' %}">Manage Routines</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'routine_homepage' %}">Routine List</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="{% url 'notifications' %}">Notifications</a></li>
                     <li class="nav-item"><a class="nav-link text-danger" href="{% url 'logout' %}">Logout</a></li>
                 </ul>
@@ -40,6 +41,8 @@
         </main>
     </div>
 </div>
+{% block scripts %}
 
+{% endblock %}
 </body>
 </html>

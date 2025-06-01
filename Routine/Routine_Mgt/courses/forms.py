@@ -5,15 +5,15 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
 class CourseForm(forms.ModelForm):
+    title = forms.CharField(required=False)
     class Meta:
         model = Course
-        fields = ['title', 'code', 'semester', 'total_classes', 'teachers']
+        fields = ['title', 'code', 'semester', 'total_classes']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter course title'}),
             'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter course code'}),
             'semester': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Spring 2025'}),
             'total_classes': forms.NumberInput(attrs={'class': 'form-control'}),
-            'teachers': forms.SelectMultiple(attrs={'class': 'form-control'}),
         }
 
 

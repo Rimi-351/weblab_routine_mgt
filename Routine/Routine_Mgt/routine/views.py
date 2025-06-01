@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from .models import Slot, Routine, Room, Notification
@@ -8,6 +9,16 @@ from django.utils import timezone
 from collections import defaultdict
 from collections import OrderedDict
 from itertools import groupby
+from datetime import datetime, timedelta, time
+from .models import Slot
+
+from django.shortcuts import render
+from collections import OrderedDict
+from datetime import time
+from .models import Routine
+
+from collections import OrderedDict
+from datetime import time
 
 def add_slot_view(request):
     if request.method == 'POST':
@@ -78,6 +89,26 @@ def available_slots_view(request):
         'days_of_week': days_of_week,
         'time_slots': unique_time_ranges,
     })
+def reschedule_class_view(request, schedule_id):
+    routine = get_object_or_404(Routine, id=schedule_id)
+    
+    if request.method == 'POST':
+        is_online = request.POST.get('is_online') == 'on'
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        
+        # Update the routine with new times and status
+        routine.is_online = is_online
+        routine.slot.start_time = start_time
+        routine.slot.end_time = end_time
+        routine.status = 'rescheduled'
+        routine.save()
+
+        return redirect('routine_list')
+    
+    return render(request, 'routine/reschedule_class.html', {
+        'routine': routine,
+    })
 
 
 def notification_list_view(request):
@@ -119,6 +150,170 @@ def routine_list_view(request):
     return render(request, 'routine/routine_list.html', context)
 
 
+def routine_homepage(request):
+    return render(request, 'routine/routine_homepage.html')
+
+def render_routine_page(request, batch, template_name='routine/routine_list2.html'):
+    routines = Routine.objects.select_related('course', 'teacher', 'room', 'slot').filter(batch=batch)
+
+    days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+    # Fixed 80-minute slots only
+    time_ranges = [
+        (time(9, 0),  time(10, 20)),
+        (time(10, 25), time(11, 45)),
+        (time(11, 50), time(13, 10)),
+        (time(14, 0),  time(15, 20)),
+        (time(15, 25), time(16, 45)),
+    ]
+
+    def time_to_minutes(t):
+        return t.hour * 60 + t.minute
+
+    routine_map = OrderedDict()
+
+    for day in days:
+        row = []
+        skip_slots = 0
+
+        for idx, (slot_start, slot_end) in enumerate(time_ranges):
+            if skip_slots > 0:
+                skip_slots -= 1
+                continue
+
+            # Find routine starting exactly at this slot
+            routine = next((r for r in routines if r.slot.day == day and r.slot.start_time == slot_start and r.slot.end_time == slot_end), None)
+
+            if routine is None:
+                # Maybe routine starts here but spans multiple slots, or no routine at all
+                routine = next((r for r in routines if r.slot.day == day and r.slot.start_time == slot_start), None)
+
+            if routine:
+                start_min = time_to_minutes(routine.slot.start_time)
+                end_min = time_to_minutes(routine.slot.end_time)
+
+                # Count how many slots this routine covers
+                colspan = 1
+                for next_idx in range(idx + 1, len(time_ranges)):
+                    next_start, next_end = time_ranges[next_idx]
+                    next_start_min = time_to_minutes(next_start)
+                    next_end_min = time_to_minutes(next_end)
+
+                    # Check if next slot fully fits inside routine time
+                    if next_start_min >= start_min and next_end_min <= end_min:
+                        colspan += 1
+                    else:
+                        break
+
+                skip_slots = colspan - 1
+                row.append((routine, colspan))
+            else:
+                row.append((None, 1))
+
+        routine_map[day] = row
+
+    routine_map_items = list(routine_map.items())
+
+    return render(request, template_name, {
+        'batch': batch,
+        'days': days,
+        'time_ranges': time_ranges,
+        'routine_map_items': routine_map_items,
+    })
+
+def routine_1_2(request):
+    return render_routine_page(request, batch='1-2')
+
+def routine_2_1(request):
+    return render_routine_page(request, batch='2-1')
+
+def routine_3_1(request):
+    return render_routine_page(request, batch='3-1')
+
+def routine_3_2(request):
+    return render_routine_page(request, batch='3-2')
+
+def routine_4_2(request):
+    return render_routine_page(request, batch='4-2')
+
+
+# def routine_create_view(request):
+#     if request.method == 'POST':
+#         course_id = request.POST.get('course')
+#         teacher_id = request.POST.get('teacher')
+#         room_id = request.POST.get('room')
+#         slot_id = request.POST.get('slot')
+#         is_online = request.POST.get('is_online') == 'on'
+
+#         course = get_object_or_404(Course, id=course_id)
+#         teacher = get_object_or_404(Teacher, id=teacher_id)
+#         room = get_object_or_404(Room, id=room_id)
+#         slot = get_object_or_404(Slot, id=slot_id)
+
+#         # Check if the room is already booked at the same slot time and day
+#         conflict = Routine.objects.filter(
+#             room=room,
+#             slot__day=slot.day,
+#             slot__start_time=slot.start_time,
+#             slot__end_time=slot.end_time,
+#             status='scheduled'
+#         ).exists()
+
+#         if conflict:
+#             return render(request, 'routine/routine_create.html', {
+#                 'error_message': f"The room {room.number} is already booked for {slot.day} {slot.start_time} - {slot.end_time}. Please choose another room or slot.",
+#                 'courses': Course.objects.all(),
+#                 'teachers': Teacher.objects.all(),
+#                 'rooms': Room.objects.all(),
+#                 'slots': Slot.objects.all(),
+#                 'selected_course_id': course_id,
+#                 'selected_teacher_id': teacher_id,
+#                 'selected_room_id': room_id,
+#                 'selected_slot_id': slot_id,
+#             })
+
+#         # If no conflict, create the routine
+#         Routine.objects.create(
+#             course=course,
+#             teacher=teacher,
+#             room=room,
+#             slot=slot,
+#             is_online=is_online,
+#             status='scheduled',
+#         )
+#         return redirect('routine_list')
+
+#     context = {
+#         'courses': Course.objects.all(),
+#         'teachers': Teacher.objects.all(),
+#         'rooms': Room.objects.all(),
+#         'slots': Slot.objects.all(),
+#     }
+#     return render(request, 'routine/routine_create.html', context)
+
+# # 🔁 Helper function to load the form with context
+# def render_routine_form(request, selected_course_id=None, selected_teacher_id=None, selected_room_id=None, selected_slot_id=None):
+#     context = {
+#         'courses': Course.objects.all(),
+#         'teachers': Teacher.objects.all(),
+#         'rooms': Room.objects.all(),
+#         'slots': Slot.objects.filter(is_available=True),
+#         'selected_course_id': selected_course_id,
+#         'selected_teacher_id': selected_teacher_id,
+#         'selected_room_id': selected_room_id,
+#         'selected_slot_id': selected_slot_id,
+#         'semesters': [
+#             ('1-1', '1st Year 1st Semester'),
+#             ('1-2', '1st Year 2nd Semester'),
+#             ('2-1', '2nd Year 1st Semester'),
+#             ('2-2', '2nd Year 2nd Semester'),
+#             ('3-1', '3rd Year 1st Semester'),
+#             ('3-2', '3rd Year 2nd Semester'),
+#             ('4-1', '4th Year 1st Semester'),
+#             ('4-2', '4th Year 2nd Semester'),
+#         ],
+#     }
+#     return render(request, 'routine/routine_create.html', context)
 
 
 
@@ -193,3 +388,58 @@ def reschedule_class_view(request, schedule_id):
     return render(request, 'routine/reschedule_class.html', {
         'routine': routine,
     })
+
+
+def update_routine(request, routine_id):
+    routine = get_object_or_404(Routine, id=routine_id)
+    courses = Course.objects.all()
+    teachers = Teacher.objects.all()
+    rooms = Room.objects.all()
+    slots = Slot.objects.all()
+    error_message = ''
+
+    if request.method == 'POST':
+        course_id = request.POST.get('course')
+        teacher_id = request.POST.get('teacher')
+        room_id = request.POST.get('room')
+        slot_id = request.POST.get('slot')
+        is_online = request.POST.get('is_online') == 'on'
+
+        try:
+            course = Course.objects.get(id=course_id)
+            teacher = Teacher.objects.get(id=teacher_id)
+            room = Room.objects.get(id=room_id)
+            slot = Slot.objects.get(id=slot_id)
+
+            # Prevent double booking for update
+            conflict = Routine.objects.filter(slot=slot, room=room).exclude(id=routine.id).exists()
+            if conflict:
+                error_message = "Selected slot is already booked for this room."
+            else:
+                routine.course = course
+                routine.teacher = teacher
+                routine.room = room
+                routine.slot = slot
+                routine.is_online = is_online
+                routine.save()
+                return redirect('routine_list')
+        except Exception:
+            error_message = "Invalid data submitted."
+
+    return render(request, 'routine_update.html', {
+        'routine': routine,
+        'courses': courses,
+        'teachers': teachers,
+        'rooms': rooms,
+        'slots': slots,
+        'error_message': error_message,
+    })
+
+# Delete Routine
+
+def delete_routine(request, routine_id):
+    routine = get_object_or_404(Routine, id=routine_id)
+    if request.method == 'POST':
+        routine.delete()
+        return redirect('routine_list')
+    return render(request, 'routine_delete.html', {'routine': routine})

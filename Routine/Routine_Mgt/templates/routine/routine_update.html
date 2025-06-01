@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Routine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4">Update Routine</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Course</label>
+            <select name="course" class="form-select">
+                {% for course in courses %}
+                    <option value="{{ course.id }}" {% if course.id == routine.course.id %}selected{% endif %}>{{ course.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Teacher</label>
+            <select name="teacher" class="form-select">
+                {% for teacher in teachers %}
+                    <option value="{{ teacher.id }}" {% if teacher.id == routine.teacher.id %}selected{% endif %}>{{ teacher.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Room</label>
+            <select name="room" class="form-select">
+                {% for room in rooms %}
+                    <option value="{{ room.id }}" {% if room.id == routine.room.id %}selected{% endif %}>{{ room.number }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Slot</label>
+            <select name="slot" class="form-select">
+                {% for slot in slots %}
+                    <option value="{{ slot.id }}" {% if slot.id == routine.slot.id %}selected{% endif %}>
+                        {{ slot.day }} - {{ slot.start_time }} to {{ slot.end_time }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input type="checkbox" name="is_online" class="form-check-input" id="is_online" {% if routine.is_online %}checked{% endif %}>
+            <label class="form-check-label" for="is_online">Online Class</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Routine</button>
+        {% if error_message %}
+            <div class="alert alert-danger mt-3">{{ error_message }}</div>
+        {% endif %}
+    </form>
+</div>
+</body>
+</html>

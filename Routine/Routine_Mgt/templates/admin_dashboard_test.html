@@ -1,3 +1,5 @@
+
+
 {% extends 'admin_base.html' %}
 
 {% block title %}Admin Dashboard{% endblock %}
@@ -9,12 +11,10 @@
 <div class="mb-4">
     {% for batch in batches %}
     <a href="?batch={{ batch }}"
-        class="btn {% if batch == selected_batch %}btn-primary{% else %}btn-outline-primary{% endif %} me-2">
-        {{ batch }}
-    </a>
+        class="btn {% if batch == selected_batch %}btn-primary{% else %}btn-outline-primary{% endif %} me-2">{{ batch
+        }}</a>
     {% endfor %}
 </div>
-
 
 <!-- Routine Table -->
 <table class="table table-bordered">
@@ -41,11 +41,20 @@
                     {% elif item.status == 'cancelled' %}bg-danger
                     {% elif item.status == 'rescheduled' %}bg-warning
                     {% else %}bg-secondary
-                    {% endif %}">
+                    {% endif %}
+                ">
                     {{ item.status|capfirst }}
                 </span>
             </td>
             <td>
+                <!-- <form method="post" action="{% url 'mark_class_status' %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="routine_id" value="{{ item.routine.id }}">
+                    <input type="hidden" name="date" value="{{ today }}">
+                    <button name="status" value="conducted" class="btn btn-success btn-sm">Conducted</button>
+                    <button name="status" value="rescheduled" class="btn btn-warning btn-sm">Rescheduled</button>
+                    <button name="status" value="cancelled" class="btn btn-danger btn-sm">Cancelled</button>
+                </form> -->
                 <form class="mark-status-form" data-routine-id="{{ item.routine.id }}" data-date="{{ today }}">
                     {% csrf_token %}
                     <input type="hidden" name="routine_id" value="{{ item.routine.id }}">
@@ -54,7 +63,9 @@
                     <button type="button" data-status="rescheduled" class="btn btn-warning btn-sm">Rescheduled</button>
                     <button type="button" data-status="cancelled" class="btn btn-danger btn-sm">Cancelled</button>
                 </form>
+
                 <span class="status-message" style="margin-left:10px;"></span>
+
             </td>
         </tr>
         {% empty %}
@@ -65,62 +76,4 @@
     </tbody>
 </table>
 
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.querySelectorAll('.mark-status-form').forEach(form => {
-  form.querySelectorAll('button').forEach(button => {
-    button.addEventListener('click', () => {
-      const routineId = form.dataset.routineId;
-      const date = form.dataset.date;
-      const status = button.dataset.status;
-      const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
-      const statusMessage = form.nextElementSibling;
-
-      fetch("{% url 'mark_class_status' %}", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-CSRFToken': csrfToken
-        },
-        body: new URLSearchParams({
-          routine_id: routineId,
-          date: date,
-          status: status
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          statusMessage.textContent = `Status updated to "${status}"`;
-          statusMessage.style.color = 'green';
-
-          // Update status badge
-          const statusCell = form.closest('tr').querySelector('td:nth-child(5) .badge');
-          if(statusCell) {
-            statusCell.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-            statusCell.className = 'badge'; // reset classes
-            if (status === 'conducted') statusCell.classList.add('bg-success');
-            else if (status === 'cancelled') statusCell.classList.add('bg-danger');
-            else if (status === 'rescheduled') statusCell.classList.add('bg-warning');
-            else statusCell.classList.add('bg-secondary');
-          }
-        } else {
-          statusMessage.textContent = data.error || 'Failed to update status.';
-          statusMessage.style.color = 'red';
-        }
-        setTimeout(() => statusMessage.textContent = '', 3000);
-      })
-      .catch(() => {
-        statusMessage.textContent = 'Error connecting to server.';
-        statusMessage.style.color = 'red';
-        setTimeout(() => statusMessage.textContent = '', 3000);
-      });
-    });
-  });
-});
-</script>
-{% endblock %}
-
-
+{% endblock %} 
