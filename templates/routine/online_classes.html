@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Online Classes for {{ day }} - {{ batch }}{% endblock %}
+
+{% block content %}
+<h2>Online Classes on {{ day }} ({{ date|date:"M d, Y" }}) for Batch {{ batch }}</h2>
+
+{% if classes %}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Course</th>
+            <th>Teacher</th>
+            <th>Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cls in classes %}
+        <tr>
+            <td>{{ cls.course.code }}</td>
+            <td>{{ cls.teacher.name }}</td>
+            <td>{{ cls.start_time|time:"g:i a" }} - {{ cls.end_time|time:"g:i a" }}</td>
+            
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No online classes found.</p>
+{% endif %}
+
+{% if batch == '1-2' %}
+    <a href="{% url 'routine_1_2' %}" class="btn btn-secondary">Back</a>
+{% elif batch == '2-1' %}
+    <a href="{% url 'routine_2_1' %}" class="btn btn-secondary">Back</a>
+{% elif batch == '3-1' %}
+    <a href="{% url 'routine_3_1' %}" class="btn btn-secondary">Back</a>
+{% elif batch == '3-2' %}
+    <a href="{% url 'routine_3_2' %}" class="btn btn-secondary">Back</a>
+{% elif batch == '4-2' %}
+    <a href="{% url 'routine_4_2' %}" class="btn btn-secondary">Back</a>
+{% endif %}
+{% endblock %}

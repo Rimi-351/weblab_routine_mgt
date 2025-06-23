@@ -18,9 +18,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth.views import LogoutView
-from routine.views import routine_list_view
+# from routine.views import routine_list_view
 from courses.views import user_logout
-from monitor.views import admin_dashboard
+# from monitor.views import admin_dashboard
 from routine import views  # ✅ Added this import
 
 urlpatterns = [
@@ -32,6 +32,6 @@ urlpatterns = [
     path('routine/', include('routine.urls')),
     path('teachers/', include('teachers.urls')), 
     path('logout/', user_logout, name='logout'),
-    path('admin-dashboard/', admin_dashboard, name='admin_dashboard'),
+    # path('admin-dashboard/', admin_dashboard, name='admin_dashboard'),
     #path('generate-slots/', views.create_weekday_class_slots, name='generate_slots'),  # ✅ Adjusted view name
 ]

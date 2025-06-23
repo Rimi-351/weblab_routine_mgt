@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Online Available Slots</title>
+</head>
+<body>
+    <h1>Online Available Slots</h1>
+
+    <h3>Note:</h3>
+    <p>Online classes should be scheduled:</p>
+    <p><strong>• After 5 PM on class days</strong></p>
+    <p><strong>• Between 9 AM and 10 PM on holidays</strong></p>
+
+    {% if booked_slots %}
+        <ul>
+            {% for slot in booked_slots %}
+                <li>
+                    Date: {{ slot.reschedule_date }} |
+                    Time: {{ slot.new_start_time }} - {{ slot.new_end_time }} |
+                    Booked by: {{ slot.teacher.name }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No online slots booked yet.</p>
+    {% endif %}
+
+  <a href="{% url 'reschedule_class' reschedule.id %}">Back to Reschedule Form</a>
+
+</body>
+</html>

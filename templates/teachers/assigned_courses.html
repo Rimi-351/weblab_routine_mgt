@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Assigned Courses - {{ teacher.name }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e6f2ff;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            font-size: 18px; /* Increased base font size */
+        }
+        h2 {
+            text-align: center;
+            color: #283593;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 2.2rem; /* Larger heading */
+        }
+        table {
+            width: 90%;
+            max-width: 900px;
+            margin: 0 auto 40px auto;
+            border-collapse: collapse; /* For borders */
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 12px rgba(0,0,0,0.08);
+            font-size: 1rem;
+        }
+        thead tr {
+            background-color: #283593;
+            color: #fff;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        thead th {
+            padding: 15px 20px;
+            text-align: center;
+            border: 2px solid #1a237e;
+        }
+        tbody tr {
+            background-color: #fff;
+            transition: background-color 0.25s ease;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 15px 20px;
+            text-align: center;
+            border: 2px solid #ddd;
+            font-weight: 500;
+            color: #333;
+        }
+        a.btn {
+            background-color: #283593;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0 auto 30px auto;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            max-width: 900px;
+            width: 90%;
+            display: block;
+            font-size: 1.1rem;
+        }
+        a.btn:hover {
+            background-color: #1a237e;
+            text-decoration: none;
+            color: white;
+        }
+        p.text-muted {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <h2>📚 Assigned Courses for {{ teacher.name }}</h2>
+
+    {% if course_stats %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Title</th>
+                    <th>Semester</th>
+                    <th>Conducted</th>
+                    <th>Rescheduled</th>
+                    <th>Missed</th>
+                    <th>Expected</th>
+                    <th>Remaining</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in course_stats %}
+                <tr>
+                    <td>{{ course.code }}</td>
+                    <td>{{ course.title }}</td>
+                    <td>{{ course.semester }}</td>
+                    <td>{{ course.conducted }}</td>
+                    <td>{{ course.rescheduled }}</td>
+                    <td>{{ course.missed }}</td>
+                    <td>{{ course.expected }}</td>
+                    <td>{{ course.remaining }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted">No assigned courses found.</p>
+    {% endif %}
+
+    <a href="{% url 'teacher_dashboard' %}" class="btn">⬅ Back to Dashboard</a>
+</body>
+</html>

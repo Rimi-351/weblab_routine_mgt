@@ -1,45 +1,121 @@
 {% extends 'admin_base.html' %}
-{% block title %}Routine List{% endblock %}
+
+{% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">Routine List</h2>
+<h2 class="mb-4">Today's Routine</h2>
 
-<table class="table table-bordered text-center">
-    <thead class="table-primary">
+<!-- Semester buttons -->
+<div class="mb-4">
+    {% for batch in batches %}
+        <a href="?batch={{ batch }}"
+           class="btn {% if batch == selected_batch %}btn-primary{% else %}btn-outline-primary{% endif %} me-2">
+            {{ batch }}
+        </a>
+    {% endfor %}
+</div>
+
+<!-- Routine Table -->
+<table class="table table-bordered">
+    <thead>
         <tr>
-            <th>Day / Time</th>
-            {% for start, end in time_ranges %}
-                <th>{{ start|time:"g:i a" }} - {{ end|time:"g:i a" }}</th>
-            {% endfor %}
+            <th>Course</th>
+            <th>Teacher</th>
+            <th>Room</th>
+            <th>Slot</th>
+            <th>Status</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        {% for day in days %}
+        {% for item in routine_status_list %}
             <tr>
-                <th>{{ day }}</th>
-                {% for start, end in time_ranges %}
-                    <td>
-                        {% with printed=0 %}
-                        {% for routine in routines %}
-                            {% if routine.slot.day == day and routine.slot.start_time == start and routine.slot.end_time == end %}
-                                <strong>{{ routine.course.code }}</strong><br>
-                                {{ routine.teacher.name }}<br>
-                                {{ routine.room.number }}
-                                {% if routine.is_online %}
-                                    <br><em>(Online)</em>
-                                {% endif %}
-                                <br>
-                                {% with printed=1 %}{% endwith %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if printed == 0 %}
-                            &mdash;
-                        {% endif %}
-                        {% endwith %}
-                    </td>
-                {% endfor %}
+                <td>{{ item.routine.course.code }} - {{ item.routine.course.title }}</td>
+                <td>{{ item.routine.teacher.name }}</td>
+                <td>{{ item.routine.room.number }}</td>
+                <td>{{ item.routine.slot.day }} {{ item.routine.slot.start_time }} - {{ item.routine.slot.end_time }}</td>
+                <td>
+                    <span class="badge 
+                        {% if item.status == 'conducted' %}bg-success
+                        {% elif item.status == 'cancelled' %}bg-danger
+                        {% elif item.status == 'rescheduled' %}bg-warning
+                        {% else %}bg-secondary
+                        {% endif %}">
+                        {{ item.status|capfirst }}
+                    </span>
+                </td>
+                <td>
+                    <form class="mark-status-form" data-routine-id="{{ item.routine.id }}" data-date="{{ today }}">
+                        {% csrf_token %}
+                        <input type="hidden" name="routine_id" value="{{ item.routine.id }}">
+                        <input type="hidden" name="date" value="{{ today }}">
+                        <button type="button" data-status="conducted" class="btn btn-success btn-sm">Conducted</button>
+                        <button type="button" data-status="rescheduled" class="btn btn-warning btn-sm">Rescheduled</button>
+                        <button type="button" data-status="cancelled" class="btn btn-danger btn-sm">Cancelled</button>
+                    </form>
+                    <span class="status-message" style="margin-left:10px;"></span>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6">No classes scheduled for today.</td>
             </tr>
         {% endfor %}
     </tbody>
 </table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.mark-status-form').forEach(form => {
+    form.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', () => {
+            const routineId = form.dataset.routineId;
+            const date = form.dataset.date;
+            const status = button.dataset.status;
+            const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+            const statusMessage = form.nextElementSibling;
+
+            fetch("{% url 'mark_class_status' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: new URLSearchParams({
+                    routine_id: routineId,
+                    date: date,
+                    status: status
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusMessage.textContent = `Status updated to "${status}"`;
+                    statusMessage.style.color = 'green';
+
+                    const statusCell = form.closest('tr').querySelector('td:nth-child(5) .badge');
+                    if (statusCell) {
+                        statusCell.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                        statusCell.className = 'badge';
+                        if (status === 'conducted') statusCell.classList.add('bg-success');
+                        else if (status === 'cancelled') statusCell.classList.add('bg-danger');
+                        else if (status === 'rescheduled') statusCell.classList.add('bg-warning');
+                        else statusCell.classList.add('bg-secondary');
+                    }
+                } else {
+                    statusMessage.textContent = data.error || 'Failed to update status.';
+                    statusMessage.style.color = 'red';
+                }
+                setTimeout(() => statusMessage.textContent = '', 3000);
+            })
+            .catch(() => {
+                statusMessage.textContent = 'Error connecting to server.';
+                statusMessage.style.color = 'red';
+                setTimeout(() => statusMessage.textContent = '', 3000);
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

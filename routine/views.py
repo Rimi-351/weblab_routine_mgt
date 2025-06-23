@@ -1,7 +1,7 @@
 #<<<<<<< HEAD
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
-from .models import Slot, Routine, Room, Notification
+from .models import Slot, Routine, Room
 from .utils import get_today_routines
 from courses.models import Course
 from teachers.models import Teacher
@@ -9,8 +9,23 @@ from django.utils import timezone
 from collections import defaultdict
 from collections import OrderedDict
 from itertools import groupby
-
-
+from teachers.models import ClassSchedule,Reschedule  # Add this at the top of your views.py
+from routine.models import Room, Slot       # Assuming these are your models for rooms and slots
+from datetime import timedelta
+from django.utils import timezone
+from .models import Room, Slot
+from teachers.models import ClassSchedule  # Make sure to import
+from django.shortcuts import render
+from collections import defaultdict, OrderedDict
+from datetime import datetime, timedelta, time
+from django.utils import timezone
+from teachers.models import ClassSchedule
+from datetime import datetime, timedelta, time
+from .models import Slot
+from django.shortcuts import render
+from collections import OrderedDict
+from datetime import time
+from .models import Routine
 def add_slot_view(request):
     if request.method == 'POST':
         day = request.POST.get('day')
@@ -39,17 +54,18 @@ def add_slot_view(request):
     return render(request, 'routine/add_slot.html')
 
 
-# def routine_home_view(request):
-#     return render(request, 'routine/routine_home.html')
-
-
 def available_slots_view(request):
-    from collections import OrderedDict
-
-    days_of_week = ['Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     rooms = Room.objects.all()
 
-    # Unique time ranges
+    # Map days of the week to real dates of current week starting Sunday
+    today = timezone.now().date()
+    weekday = today.weekday()  # Monday = 0
+    # Calculate last Sunday (weekday + 1) mod 7, Sunday = 6 in weekday() system, so adjust:
+    sunday = today - timedelta(days=(weekday + 1) % 7)
+    date_map = {days_of_week[i]: sunday + timedelta(days=i) for i in range(7)}
+
+    # Get unique time ranges from Slot table (start_time, end_time)
     unique_time_ranges = []
     seen = set()
     for slot in Slot.objects.order_by('start_time', 'end_time'):
@@ -62,12 +78,20 @@ def available_slots_view(request):
 
     for day in days_of_week:
         for time_range in unique_time_ranges:
-            matching_slots = Slot.objects.filter(day=day, start_time=time_range['start_time'], end_time=time_range['end_time'])
-
             available_rooms = set(rooms)
-            for slot in matching_slots:
-                booked_rooms = Routine.objects.filter(slot=slot, status='scheduled').values_list('room', flat=True)
-                available_rooms -= set(Room.objects.filter(id__in=booked_rooms))
+
+            # Query booked rooms by filtering ClassSchedule by date, start_time, end_time, and status
+            booked_rooms_ids = ClassSchedule.objects.filter(
+                date=date_map[day],
+                start_time=time_range['start_time'],
+                end_time=time_range['end_time'],
+                status__in=['pending', 'conducted', 'rescheduled']
+            ).values_list('room_id', flat=True)
+
+            booked_rooms = set(Room.objects.filter(id__in=booked_rooms_ids))
+
+            # Remove booked rooms from available rooms
+            available_rooms -= booked_rooms
 
             weekly_availability.append({
                 'day': day,
@@ -79,13 +103,6 @@ def available_slots_view(request):
         'weekly_availability': weekly_availability,
         'days_of_week': days_of_week,
         'time_slots': unique_time_ranges,
-    })
-
-
-def notification_list_view(request):
-    notifications = Notification.objects.all().order_by('-created_at')[:10]
-    return render(request, 'routine/notifications.html', {
-        'notifications': notifications,
     })
 
 
@@ -133,7 +150,7 @@ def routine_create_view(request):
         slot = get_object_or_404(Slot, id=slot_id)
 
         # Check if the room and slot are already booked
-        existing_routine = Routine.objects.filter(room=room, slot=slot, status='scheduled').exists()
+        existing_routine = Routine.objects.filter(room=room, slot=slot,).exists()
         if existing_routine:
             return render(request, 'routine/routine_create.html', {
                 'error_message': f"The selected room {room.number} is already booked for {slot.get_slot_date()} at {slot.start_time} - {slot.end_time}. Please choose a different slot or room.",
@@ -154,7 +171,7 @@ def routine_create_view(request):
             room=room,
             slot=slot,
             is_online=is_online,
-            status='scheduled',
+            
         )
         return redirect('routine_list')
 
@@ -191,26 +208,16 @@ def reschedule_class_view(request, schedule_id):
         'routine': routine,
     })
 
-from datetime import datetime, timedelta, time
-from .models import Slot
 
-from django.shortcuts import render
-from collections import OrderedDict
-from datetime import time
-from .models import Routine
 
 def routine_homepage(request):
     return render(request, 'routine/routine_homepage.html')
 
-from collections import OrderedDict
-from datetime import time
 
 def render_routine_page(request, batch, template_name='routine/routine_list2.html'):
-    routines = Routine.objects.select_related('course', 'teacher', 'room', 'slot').filter(batch=batch)
-
     days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-    # Fixed 80-minute slots only
+    # Define fixed time ranges
     time_ranges = [
         (time(9, 0),  time(10, 20)),
         (time(10, 25), time(11, 45)),
@@ -222,89 +229,170 @@ def render_routine_page(request, batch, template_name='routine/routine_list2.htm
     def time_to_minutes(t):
         return t.hour * 60 + t.minute
 
-    routine_map = OrderedDict()
+    # Calculate current week (Sunday to Saturday)
+    
+    from django.utils.timezone import localdate
+    today = localdate()
 
+    #today = timezone.now().date()
+    weekday = today.weekday()  # Monday = 0
+    # sunday = today - timedelta(days=weekday + 1) if weekday != 6 else today
+    sunday = today - timedelta(days=(today.weekday() + 1) % 7)
+    week_dates = [sunday + timedelta(days=i) for i in range(7)]
+
+    date_map = {
+        days[i]: week_dates[i]
+        for i in range(len(days))
+    }
+
+    # Fetch ClassSchedule for the week
+    schedules = ClassSchedule.objects.select_related('course', 'teacher', 'room') \
+        .filter(semester=batch, date__range=(week_dates[0], week_dates[-1]))
+
+    # Main routine map for displaying grid
+    routine_map = OrderedDict()
     for day in days:
         row = []
         skip_slots = 0
-
         for idx, (slot_start, slot_end) in enumerate(time_ranges):
             if skip_slots > 0:
                 skip_slots -= 1
                 continue
 
-            # Find routine starting exactly at this slot
-            routine = next((r for r in routines if r.slot.day == day and r.slot.start_time == slot_start and r.slot.end_time == slot_end), None)
+            # Match the class that starts at this slot and spans into others
+            schedule = next((
+                s for s in schedules
+                if s.date == date_map[day] and
+                   s.start_time == slot_start and
+                   time_to_minutes(s.end_time) > time_to_minutes(slot_start) and
+                   s.status in ['pending', 'conducted','rescheduled']
+            ), None)
 
-            if routine is None:
-                # Maybe routine starts here but spans multiple slots, or no routine at all
-                routine = next((r for r in routines if r.slot.day == day and r.slot.start_time == slot_start), None)
+            if schedule:
+                start_min = time_to_minutes(schedule.start_time)
+                end_min = time_to_minutes(schedule.end_time)
 
-            if routine:
-                start_min = time_to_minutes(routine.slot.start_time)
-                end_min = time_to_minutes(routine.slot.end_time)
-
-                # Count how many slots this routine covers
                 colspan = 1
                 for next_idx in range(idx + 1, len(time_ranges)):
                     next_start, next_end = time_ranges[next_idx]
-                    next_start_min = time_to_minutes(next_start)
-                    next_end_min = time_to_minutes(next_end)
-
-                    # Check if next slot fully fits inside routine time
-                    if next_start_min >= start_min and next_end_min <= end_min:
+                    if time_to_minutes(next_end) <= end_min:
                         colspan += 1
                     else:
                         break
 
                 skip_slots = colspan - 1
-                row.append((routine, colspan))
+                row.append((schedule, colspan))
             else:
                 row.append((None, 1))
 
         routine_map[day] = row
 
-    routine_map_items = list(routine_map.items())
+    # Rescheduled classes (for yellow column)
+    rescheduled_map = defaultdict(lambda: defaultdict(list))
+    for s in schedules.filter(status='rescheduled'):
+        d = s.date
+        day = d.strftime('%A')
+        rescheduled_map[day][d].append(s)
 
     return render(request, template_name, {
         'batch': batch,
         'days': days,
         'time_ranges': time_ranges,
-        'routine_map_items': routine_map_items,
+        'routine_map_items': list(routine_map.items()),
+        'rescheduled_map': rescheduled_map,
+        'date_map': date_map,
     })
 
-# def render_routine_page(request, batch, template_name='routine/routine_list2.html'):
-#     routines = Routine.objects.select_related('course', 'teacher', 'room', 'slot').filter(batch=batch)
 
-#     days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-#     time_ranges = [
-#         (time(9, 0),  time(10, 20)),
-#         (time(10, 25), time(11, 45)),
-#         (time(10, 25), time(13, 10)),
-#         (time(11, 50), time(13, 10)),
-#         (time(14, 0),  time(15, 20)),
-#         (time(14, 0),  time(16, 45)),
-#         (time(15, 25), time(16, 45)),
-#     ]
 
-#     routine_map = OrderedDict()
-#     for day in days:
-#         row = []
-#         for start, end in time_ranges:
-#             routine = next((r for r in routines if r.slot.day == day and r.slot.start_time == start and r.slot.end_time == end), None)
-#             row.append(routine)
-#         routine_map[day] = row
+from collections import OrderedDict, defaultdict
+from datetime import time, timedelta
+from django.shortcuts import render
+from django.utils.timezone import localdate
+from teachers.models import ClassSchedule
 
-#     # Convert dict to list of tuples for template-friendly iteration
-#     routine_map_items = list(routine_map.items())
+def render_routine_page_2(request, batch, template_name='routine/routine_list2.html'):
+    # Python weekday order: Monday=0 ... Sunday=6
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-#     return render(request, template_name, {
-#         'batch': batch,
-#         'days': days,
-#         'time_ranges': time_ranges,
-#         'routine_map_items': routine_map_items,  # pass list of tuples instead of dict
-#     })
+    # Define fixed time ranges
+    time_ranges = [
+        (time(9, 0),  time(10, 20)),
+        (time(10, 25), time(11, 45)),
+        (time(11, 50), time(13, 10)),
+        (time(14, 0),  time(15, 20)),
+        (time(15, 25), time(16, 45)),
+    ]
 
+    def time_to_minutes(t):
+        return t.hour * 60 + t.minute
+
+    # Get today's local date
+    today = localdate()
+
+    # Get start of next week (next Monday)
+    monday = today - timedelta(days=today.weekday()) + timedelta(weeks=1)
+    week_dates = [monday + timedelta(days=i) for i in range(7)]
+
+    # Match each Python day name with date
+    date_map = {
+        days[i]: week_dates[i]
+        for i in range(len(days))
+    }
+
+    # Filter schedules by semester and next week's date range
+    schedules = ClassSchedule.objects.select_related('course', 'teacher', 'room') \
+        .filter(semester=batch, date__range=(week_dates[0], week_dates[-1]))
+
+    # Prepare weekly routine map
+    routine_map = OrderedDict()
+    for day in days:
+        row = []
+        skip_slots = 0
+        for idx, (slot_start, slot_end) in enumerate(time_ranges):
+            if skip_slots > 0:
+                skip_slots -= 1
+                continue
+
+            schedule = next((
+                s for s in schedules
+                if s.date == date_map[day] and
+                   s.start_time == slot_start and
+                   time_to_minutes(s.end_time) > time_to_minutes(slot_start) and
+                   s.status in ['pending', 'conducted']
+            ), None)
+
+            if schedule:
+                start_min = time_to_minutes(schedule.start_time)
+                end_min = time_to_minutes(schedule.end_time)
+                colspan = 1
+                for next_idx in range(idx + 1, len(time_ranges)):
+                    next_start, next_end = time_ranges[next_idx]
+                    if time_to_minutes(next_end) <= end_min:
+                        colspan += 1
+                    else:
+                        break
+                skip_slots = colspan - 1
+                row.append((schedule, colspan))
+            else:
+                row.append((None, 1))
+
+        routine_map[day] = row
+
+    # Rescheduled class map
+    rescheduled_map = defaultdict(lambda: defaultdict(list))
+    for s in schedules.filter(status='rescheduled'):
+        d = s.date
+        rescheduled_map[d.strftime('%A')][d].append(s)
+
+    return render(request, template_name, {
+        'batch': batch,
+        'days': days,
+        'time_ranges': time_ranges,
+        'routine_map_items': list(routine_map.items()),
+        'rescheduled_map': rescheduled_map,
+        'date_map': date_map,
+    })
 
 # Individual pages
 def routine_1_2(request):
@@ -322,58 +410,77 @@ def routine_3_2(request):
 def routine_4_2(request):
     return render_routine_page(request, batch='4-2')
 
-# def generate_slots_for_weekdays(request):
-#     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-#     start = time(9, 0)
-#     end = time(17, 0)
-#     lunch_start = time(13, 10)
-#     lunch_end = time(14, 0)
-#     duration = timedelta(minutes=80)
 
-#     for day in days:
-#         current = datetime.combine(datetime.today(), start)
-#         end_datetime = datetime.combine(datetime.today(), end)
+# routine a Online class show korar jonno
+from django.shortcuts import render
+from django.utils import timezone
+from datetime import timedelta
+from teachers.models import ClassSchedule
 
-#         while current.time() < end and (current + duration).time() <= end:
-#             start_time = current.time()
-#             end_time = (current + duration).time()
+# def routine_online_classes(request, batch, day):
+#     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-#             # Skip lunch time
-#             if end_time <= lunch_start or start_time >= lunch_end:
-#                 # Create if not exists
-#                 Slot.objects.get_or_create(
-#                     day=day,
-#                     start_time=start_time,
-#                     end_time=end_time,
-#                     defaults={'is_available': True}
-#                 )
-#             current += duration
+#     today = timezone.now().date()
+#     weekday_index = (today.weekday() + 1) % 7
+#     start_of_week = today - timedelta(days=weekday_index) 
 
-#     return HttpResponse("Slots generated successfully for Monday to Friday.")
+#     matching_date = None
+#     for i in range(7):
+#         current_date = start_of_week + timedelta(days=i)
+#         if current_date.strftime('%A').lower() == day.lower():
+#             matching_date = current_date
+#             break
 
-# def render_routine_page(request, batch, template_name='routine/routine_list2.html'):
-#     routines = Routine.objects.select_related('course', 'teacher', 'room', 'slot').filter(batch=batch)
+#     classes = ClassSchedule.objects.none()
+#     if matching_date:
+#         classes = ClassSchedule.objects.filter(
+#             semester=batch,
+#             date=matching_date,
+#             class_type='online'
+#         ).select_related('course', 'teacher', 'room')
 
-#     days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-#     time_ranges = [
-#         (time(9, 0), time(10, 20)),
-#         (time(10, 25), time(11, 45)),
-#         (time(11, 50), time(13, 10)),
-#         (time(14, 0), time(15, 20)),
-#         (time(15, 25), time(16, 45)),
-#     ]
-
-#     routine_map = OrderedDict()
-#     for day in days:
-#         row = []
-#         for start, end in time_ranges:
-#             routine = next((r for r in routines if r.slot.day == day and r.slot.start_time == start and r.slot.end_time == end), None)
-#             row.append(routine)
-#         routine_map[day] = row
-
-#     return render(request, template_name, {
+#     return render(request, 'routine/online_classes.html', {
 #         'batch': batch,
-#         'days': days,
-#         'time_ranges': time_ranges,
-#         'routine_map': routine_map,
+#         'day': day,
+#         'classes': classes,
+#         'date': matching_date
+#     })
+
+from datetime import datetime
+from django.http import HttpResponseBadRequest
+def routine_online_classes(request, batch, day, date_str):
+    try:
+        matching_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return HttpResponseBadRequest("Invalid date format")
+
+    classes = ClassSchedule.objects.filter(
+        semester=batch,
+        date=matching_date,
+        class_type='online'
+    ).select_related('course', 'teacher', 'room')
+
+    return render(request, 'routine/online_classes.html', {
+        'batch': batch,
+        'day': day,
+        'classes': classes,
+        'date': matching_date
+    })
+# def routine_online_classes(request, batch, day, date_str):
+#     try:
+#         matching_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+#     except ValueError:
+#         return HttpResponseBadRequest("Invalid date format")
+
+#     classes = ClassSchedule.objects.filter(
+#         semester=batch,
+#         date=matching_date,
+#         class_type='online'
+#     ).select_related('course', 'teacher', 'room')
+
+#     return render(request, 'routine/online_classes.html', {
+#         'batch': batch,
+#         'day': day,
+#         'classes': classes,
+#         'date': matching_date
 #     })

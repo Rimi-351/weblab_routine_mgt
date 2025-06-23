@@ -1,29 +1,50 @@
 {% extends 'base.html' %}
+{% load dict_extras %}
 {% block title %}Routine for {{ batch }}{% endblock %}
 
 {% block content %}
 <h2 class="text-center mb-4">Routine for Batch {{ batch }}</h2>
 
-<table class="table table-bordered text-center">
+<table class="table table-bordered text-center align-middle">
     <thead class="table-primary">
         <tr>
             <th>Day / Time</th>
             {% for start, end in time_ranges %}
                 <th>{{ start|time:"g:i a" }} - {{ end|time:"g:i a" }}</th>
             {% endfor %}
+            <th>View Online Classes</th>
         </tr>
     </thead>
     <tbody>
         {% for day, routines in routine_map_items %}
             <tr>
-                <th>{{ day }}</th>
+                <th>
+                    {{ day }}<br>
+                    <small class="text-muted">
+                        {{ date_map|dict_get:day|date:"M d, Y" }}
+                    </small>
+                </th>
+
                 {% for routine, colspan in routines %}
                     {% if routine %}
-                        <td colspan="{{ colspan }}">
+                        <td colspan="{{ colspan }}"
+                            {% if routine.status|lower == 'rescheduled' %}
+                                style="background-color: yellow;"
+                            {% elif routine.status|lower == 'cancelled' %}
+                                style="background-color: rgb(219, 139, 163);"
+                            {% endif %}
+
+                            
+                            {% if routine.status == 'rescheduled' %}
+                                class="bg-warning-text-dark"
+                            {% elif routine.status == 'cancelled' %}
+                                class="bg-danger-subtle"
+                            {% endif %}
+                        >
                             <strong>{{ routine.course.code }}</strong><br>
                             {{ routine.teacher.name }}<br>
-                            {{ routine.room.number }}
-                            {% if routine.is_online %}
+                            Room: {{ routine.room.number }}
+                            {% if routine.class_type == 'online' %}
                                 <br><em>(Online)</em>
                             {% endif %}
                         </td>
@@ -31,8 +52,17 @@
                         <td>&mdash;</td>
                     {% endif %}
                 {% endfor %}
+
+                <td>
+                    <a href="{% url 'routine_online_classes' batch=batch day=day date_str=date_map|dict_get:day|date:'Y-m-d' %}" class="btn btn-sm btn-info">View Classes</a>
+                    {% comment %} <a href="{% url 'routine_online_classes' batch=batch day=day %}" class="btn btn-sm btn-info">View Classes</a> {% endcomment %}
+
+                </td>
+                
+
             </tr>
         {% endfor %}
     </tbody>
 </table>
+ 
 {% endblock %}

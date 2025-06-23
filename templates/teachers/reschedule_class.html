@@ -61,7 +61,6 @@
             border-top: 1px solid #ccc;
         }
 
-        /* Radio Buttons inline styling */
         input[type="radio"] {
             margin-right: 6px;
             transform: scale(1.2);
@@ -76,7 +75,6 @@
             display: inline;
         }
 
-        /* Available Slots button */
         .available-slots-btn {
             display: inline-block;
             background-color: #00509e;
@@ -91,13 +89,12 @@
             transition: background-color 0.3s ease, transform 0.2s ease;
             box-shadow: 0 3px 6px rgba(0,80,158,0.3);
         }
+
         .available-slots-btn:hover {
             background-color: #003366;
             transform: scale(1.05);
             box-shadow: 0 5px 10px rgba(0,80,158,0.5);
         }
-
-        /* Submit button */
         button[type="submit"] {
             background-color: #007acc;
             color: white;
@@ -112,12 +109,12 @@
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 8px rgba(0,122,204,0.4);
         }
+
         button[type="submit"]:hover {
             background-color: #005f99;
             box-shadow: 0 6px 14px rgba(0,95,153,0.7);
         }
 
-        /* Messages */
         .messages {
             list-style: none;
             padding: 0;
@@ -143,7 +140,6 @@
             border: 1px solid #badbcc;
         }
 
-        /* Error messages below individual fields */
         .error {
             color: #842029;
             background-color: #f8d7da;
@@ -154,126 +150,147 @@
             font-size: 14px;
         }
 
-        /* Invalid input styling */
-        input:invalid, select:invalid, textarea:invalid {
+        input:invalid,
+        select:invalid,
+        textarea:invalid {
             border-color: #dc3545;
             box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
         }
 
-        /* Smooth transitions */
         input, select, textarea {
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
     </style>
 </head>
 <body>
+
     {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-    </ul>
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
     {% endif %}
 
-    <h2>Reschedule Class: {{ class_schedule.subject }}</h2>
+    <h2>Reschedule Class: {{ class_schedule.course.title }} ( {{ class_schedule.course.code }} )</h2>
 
-    <form method="POST" novalidate>
-        {% csrf_token %}
-
-        <!-- Date Picker -->
-        <label for="id_reschedule_date">Select Date:</label>
+<form method="post">
+    {% csrf_token %}
+    <p>
+        {{ form.reschedule_date.label_tag }}
         {{ form.reschedule_date }}
-        {% if form.reschedule_date.errors %}
-            <div class="error">{{ form.reschedule_date.errors|striptags }}</div>
-        {% endif %}
+    </p>
 
-        <hr>
-
-        <!-- Online / Offline -->
-        <label>Is this class Online or Offline?</label>
+    <p>
+        {{ form.is_online.label }}<br />
         {% for radio in form.is_online %}
             {{ radio.tag }} {{ radio.choice_label }}
         {% endfor %}
-        {% if form.is_online.errors %}
-            <div class="error">{{ form.is_online.errors|striptags }}</div>
-        {% endif %}
+    </p>
+    <div id="slot-section">
+        <p>
+            {{ form.selected_slot.label_tag }}
+            {{ form.selected_slot }}
+        </p>
+    </div>
 
-        <hr>
 
-        <div id="online-fields" style="display: none;">
-            <label for="id_online_duration">Online Duration (minutes)</label>
-            {{ form.online_duration }}
-            {% if form.online_duration.errors %}
-                <div class="error">{{ form.online_duration.errors|striptags }}</div>
-            {% endif %}
-        </div>
 
-        <div id="offline-fields" style="display: none;">
-            <!-- Available Slots button -->
-            <a href="http://127.0.0.1:8000/routine/available-slots/" class="available-slots-btn" target="_blank" rel="noopener noreferrer">Available Slots</a>
+    <button type="submit">Submit</button>
+</form>
 
-            <!-- Room Number input -->
-            <label for="id_room">Room Number</label>
-            {{ form.room }}
-            {% if form.room.errors %}
-                <div class="error">{{ form.room.errors|striptags }}</div>
-            {% endif %}
+<script>
+    function updateAvailableSlots(isOnline) {
+        const dateInput = document.getElementById('id_reschedule_date');
+        const slotSelect = document.getElementById('id_selected_slot');
+        const dateVal = dateInput.value;
 
-            <label for="id_offline_duration">Offline Duration (minutes)</label>
-            {{ form.offline_duration }}
-            {% if form.offline_duration.errors %}
-                <div class="error">{{ form.offline_duration.errors|striptags }}</div>
-            {% endif %}
-        </div>
-
-        <label for="id_new_start_time">New Start Time</label>
-        {{ form.new_start_time }}
-        {% if form.new_start_time.errors %}
-            <div class="error">{{ form.new_start_time.errors|striptags }}</div>
-        {% endif %}
-
-        <label for="id_new_end_time">New End Time</label>
-        {{ form.new_end_time }}
-        {% if form.new_end_time.errors %}
-            <div class="error">{{ form.new_end_time.errors|striptags }}</div>
-        {% endif %}
-
-        <button type="submit">Save Changes</button>
-    </form>
-
-    <script>
-        function toggleFields() {
-            const onlineRadio = document.getElementById('id_is_online_0');
-            const offlineRadio = document.getElementById('id_is_online_1');
-            const onlineFields = document.getElementById('online-fields');
-            const offlineFields = document.getElementById('offline-fields');
-            const roomInput = document.getElementById('id_room');
-
-            if (onlineRadio.checked) {
-                onlineFields.style.display = 'block';
-                offlineFields.style.display = 'none';
-                roomInput.required = false;
-                // Make online_duration required
-                document.getElementById('id_online_duration').required = true;
-                document.getElementById('id_offline_duration').required = false;
-            } else if (offlineRadio.checked) {
-                onlineFields.style.display = 'none';
-                offlineFields.style.display = 'block';
-                roomInput.required = true;
-                document.getElementById('id_online_duration').required = false;
-                document.getElementById('id_offline_duration').required = true;
-            }
+        if (!dateVal) {
+            slotSelect.innerHTML = '';
+            return;
         }
 
-        // Attach event listeners to radio buttons
-        document.querySelectorAll('input[name="is_online"]').forEach((input) => {
-            input.addEventListener('change', toggleFields);
-        });
+        const teacherId = "{{ class_schedule.teacher.id }}";
+        const semester = "{{ class_schedule.semester }}";
 
-        // On page load, check which radio is selected and toggle accordingly
-        document.addEventListener('DOMContentLoaded', () => {
-            toggleFields();
-        });
-    </script>
+        const url = new URL("{% url 'ajax_available_slots' %}", window.location.origin);
+        url.searchParams.append('date', dateVal);
+        url.searchParams.append('is_online', isOnline.toString());
+        url.searchParams.append('teacher_id', teacherId);
+        url.searchParams.append('semester', semester);
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                slotSelect.innerHTML = '';
+                if (data.slots.length === 0) {
+                    const option = document.createElement('option');
+                    option.text = 'No available slots';
+                    option.value = '';
+                    slotSelect.add(option);
+                    return;
+                }
+                for (const slot of data.slots) {
+                    const option = document.createElement('option');
+                    option.value = slot.value;
+                    option.text = slot.label;
+                    slotSelect.add(option);
+                }
+            })
+            .catch(err => {
+                console.error('Error loading slots:', err);
+            });
+    }
+
+    function toggleFields() {
+        const onlineRadio = document.getElementById('id_is_online_0');
+        updateAvailableSlots(onlineRadio.checked);
+       // const onlineRadio = document.getElementById('id_is_online_0');
+       // const offlineRadio = document.getElementById('id_is_online_1');
+       // const onlineFields = document.getElementById('online-fields');
+       // const offlineFields = document.getElementById('offline-fields');
+
+        if (onlineRadio.checked) {
+            onlineFields.style.display = "block";
+            offlineFields.style.display = "none";
+            updateAvailableSlots(true);
+        } else if (offlineRadio.checked) {
+            onlineFields.style.display = "none";
+            offlineFields.style.display = "block";
+            updateAvailableSlots(false);
+        } else {
+            onlineFields.style.display = "none";
+            offlineFields.style.display = "none";
+        }
+    }
+
+    document.querySelectorAll('input[name="is_online"]').forEach(input => {
+        input.addEventListener('change', toggleFields);
+    });
+
+    document.getElementById('id_reschedule_date').addEventListener('change', () => {
+        const onlineRadio = document.getElementById('id_is_online_0');
+        const offlineRadio = document.getElementById('id_is_online_1');
+        if (onlineRadio.checked) {
+            updateAvailableSlots(true);
+        } else if (offlineRadio.checked) {
+            updateAvailableSlots(false);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        toggleFields(); // initialize view on load
+    });
+</script>
+<br> <br>
+<div style="padding: 10px; text-align: left;">
+    <a href="{% url 'teacher_dashboard' %}" 
+       class="btn btn-primary" 
+       style="font-size: 16px; padding: 10px 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); text-decoration: none;">
+        🏠 Dashboard
+    </a>
+</div>
+
+   
 </body>
 </html>

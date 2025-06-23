@@ -1,59 +1,8 @@
 from django import forms
-from .models import Reschedule
+from django.utils import timezone
+from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
-from .models import Teacher
-
-class RescheduleForm(forms.ModelForm):
-    is_online = forms.TypedChoiceField(
-        choices=[(True, 'Online'), (False, 'Offline')],
-        coerce=lambda x: x == 'True',
-        widget=forms.RadioSelect
-    )
-
-    class Meta:
-        model = Reschedule
-        fields = [
-            'reschedule_date',
-            'is_online',
-            'online_duration',
-            'offline_duration',
-            'room',
-            'new_start_time',
-            'new_end_time',
-        ]
-        widgets = {
-            'reschedule_date': forms.DateInput(attrs={'type': 'date'}),
-            'online_duration': forms.NumberInput(attrs={'min': 0}),
-            'offline_duration': forms.NumberInput(attrs={'min': 0}),
-            'room': forms.TextInput(attrs={'placeholder': 'Enter room number'}),
-            'new_start_time': forms.TimeInput(attrs={'type': 'time'}),
-            'new_end_time': forms.TimeInput(attrs={'type': 'time'}),
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        new_start_time = cleaned_data.get('new_start_time')
-        new_end_time = cleaned_data.get('new_end_time')
-        is_online = cleaned_data.get('is_online')
-        room = cleaned_data.get('room')
-        online_duration = cleaned_data.get('online_duration')
-        offline_duration = cleaned_data.get('offline_duration')
-
-        if new_start_time and new_end_time:
-            if new_start_time >= new_end_time:
-                raise ValidationError("End time must be later than start time.")
-
-        if is_online:
-            if not online_duration or online_duration <= 0:
-                raise ValidationError("Please enter a valid online duration (minutes).")
-        else:
-            if not room:
-                raise ValidationError("Please enter the room number for offline classes.")
-            if not offline_duration or offline_duration <= 0:
-                raise ValidationError("Please enter a valid offline duration (minutes).")
-
-        return cleaned_data
-
+from .models import Reschedule, Teacher
 
 class TeacherForm(forms.ModelForm):
     class Meta:
@@ -65,3 +14,66 @@ class TeacherForm(forms.ModelForm):
             'designation': forms.TextInput(attrs={'class': 'form-control'}),
             'department': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class ScheduleGenerationForm(forms.Form):
+    start_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    end_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+
+
+class RescheduleForm(forms.ModelForm):
+    is_online = forms.TypedChoiceField(
+        choices=[(True, 'Online'), (False, 'Offline')],
+        coerce=lambda x: x == 'True',
+        widget=forms.RadioSelect
+    )
+
+    selected_slot = forms.ChoiceField(
+        choices=[],  # filled dynamically
+        required=False,
+        label="Select Stot"
+    )
+
+    class Meta:
+        model = Reschedule
+        fields = ['reschedule_date', 'is_online', 'selected_slot']
+        widgets = {
+            'reschedule_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.class_schedule = kwargs.pop('class_schedule', None)
+        super().__init__(*args, **kwargs)
+        self.fields['selected_slot'].choices = []
+
+    def clean(self):
+        cleaned_data = super().clean()
+        is_online = cleaned_data.get('is_online')
+        reschedule_date = cleaned_data.get('reschedule_date')
+        selected_slot = cleaned_data.get('selected_slot')
+
+        if not reschedule_date:
+            raise forms.ValidationError("Please select a reschedule date.")
+
+        # Friday=4, Saturday=5
+        weekday = reschedule_date.weekday()
+
+        if weekday in [4, 5] and not is_online:
+            raise forms.ValidationError("Offline classes are NOT allowed on Friday or Saturday.")
+
+        if not selected_slot:
+            if is_online:
+                raise forms.ValidationError("Online class requires selecting a slot.")
+            else:
+                raise forms.ValidationError("Offline class requires selecting a slot.")
+        # if is_online:
+        #     if not selected_slot:
+        #         raise forms.ValidationError("Online class requires selecting a slot.")
+        # else:
+        #     if weekday in [4, 5]:
+        #         raise forms.ValidationError("Offline classes are NOT allowed on Friday or Saturday.")
+
+        #     if not cleaned_data.get('selected_slot'):
+        #         raise forms.ValidationError("Offline class requires selecting a slot.")
+
+        return cleaned_data

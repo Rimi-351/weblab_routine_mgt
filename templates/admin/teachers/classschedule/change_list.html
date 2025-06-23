@@ -1,0 +1,10 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools %}
+    {{ block.super }}
+    <div class="object-tools">
+        <a href="{% url 'admin:generate_schedules' %}" class="btn btn-success">
+            <i class="fas fa-plus-circle"></i> Generate Class Schedules
+        </a>
+    </div>
+{% endblock %}

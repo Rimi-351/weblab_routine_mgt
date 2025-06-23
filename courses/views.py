@@ -1,14 +1,4 @@
 
-# from django.shortcuts import render, redirect, get_object_or_404
-# from .models import Course
-# from .forms import CourseForm  # You'll need to create this form
-# from django.contrib.auth.forms import AuthenticationForm
-# from django.contrib.auth import login, logout
-# from django.contrib import messages
-# from .forms import CustomUserCreationForm
-# from teachers.models import Teacher
-# from django.contrib.auth.models import User
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -77,7 +67,7 @@ def user_login(request):
 
             # Check user role
             if user.is_superuser:
-                return redirect('/admin-dashboard/')  # or your custom admin dashboard
+                return redirect('/admin/')  # or your custom admin dashboard
             else:
                 try:
                     teacher = Teacher.objects.get(user=user)

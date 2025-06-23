@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .table-container {
+        margin: 30px auto;
+        max-width: 1000px;
+        background: #f4f7f8;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Segoe UI', sans-serif;
+    }
+    th, td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ccc;
+    }
+    th {
+        background-color: #00509e;
+        color: white;
+    }
+    tr:nth-child(even) {
+        background-color: #f0f4f8;
+    }
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #003366;
+    }
+</style>
+
+<div class="table-container">
+    <h2>📘 Online Rescheduled Classes</h2>
+    {% if rescheduled_classes %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Teacher</th>
+                    <th>Date</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration (min)</th>
+                    <th>Semester</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reschedule in rescheduled_classes %}
+                <tr>
+                    <td>{{ reschedule.class_schedule.subject }}</td>
+                    <td>{{ reschedule.class_schedule.teacher.name }}</td>
+                    <td>{{ reschedule.reschedule_date }}</td>
+                    <td>{{ reschedule.new_start_time|default:reschedule.class_schedule.start_time }}</td>
+                    <td>{{ reschedule.new_end_time|default:reschedule.class_schedule.end_time }}</td>
+                    <td>{{ reschedule.online_duration }}</td>
+                    <td>{{ reschedule.semester }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No online rescheduled classes found.</p>
+    {% endif %}
+</div>
+{% endblock %}
